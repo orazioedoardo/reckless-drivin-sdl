@@ -23,10 +23,6 @@
 
 void ObjectPhysics(tObject *);
 
-int abs(int x)
-{
-	return x>=0?x:-x;
-}
 
 /* Byte-swap all fields of an object type loaded from big-endian pack data */
 void SwapObjectType(tObjectType *ot)

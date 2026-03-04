@@ -46,7 +46,7 @@ float gPlayerSlide[4]={0,0,0,0};
 float gSpikeFrame;
 int gLCheat;
 
-int abs(int x);
+
 void CopClear();
 
 /* Byte-swap a tLevelData struct loaded from big-endian pack */

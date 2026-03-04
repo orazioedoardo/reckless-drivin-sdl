@@ -122,7 +122,7 @@ void ResurrectPlayer()
 	CopClear();
 }
 
-int abs(int);
+
 
 void PlayerHandling()
 {

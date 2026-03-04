@@ -8,7 +8,7 @@
 
 *Originally by [Jonas Echterhoff](https://github.com/jechter/RecklessDrivin) (2000), brought back to life on modern hardware*
 
-**macOS (Apple Silicon & Intel) &bull; SDL2 &bull; No Emulator Required**
+**macOS (Apple Silicon & Intel) &bull; Linux &bull; SDL2 &bull; No Emulator Required**
 
 ---
 
@@ -49,8 +49,8 @@ This is the result: a port of Reckless Drivin' with all 10 levels, every screen,
 - **Resizable window:** maintains 4:3 aspect ratio with letterboxing
 - **Persistent preferences:** settings, high scores, lap records, and key bindings saved between sessions
 - **Native macOS app bundle:** builds as a proper `.app` with the original 2002 icon, ad-hoc signed, SDL2 bundled inside; zip it and send to a friend
-- **Broad compatibility:** targets macOS 11.0+ (Big Sur), supports every Apple Silicon Mac ever made plus late Intel Macs
-- **No external dependencies:** SDL2 is bundled into the app automatically; no Homebrew or manual installs needed to run
+- **Broad compatibility:** macOS 11.0+ (Big Sur through current), Linux (x86_64, ARM64)
+- **No external dependencies on macOS:** SDL2 is bundled into the app automatically; no Homebrew or manual installs needed to run
 
 ---
 
@@ -60,7 +60,7 @@ This is the result: a port of Reckless Drivin' with all 10 levels, every screen,
 
 | | |
 |---|---|
-| **OS** | macOS (Apple Silicon or Intel) |
+| **OS** | macOS (Apple Silicon or Intel), Linux |
 | **Compiler** | Clang or GCC (C11) |
 | **Build tool** | CMake 3.16+ |
 | **Library** | SDL2 |
@@ -71,6 +71,9 @@ This is the result: a port of Reckless Drivin' with all 10 levels, every screen,
 # Install SDL2 (macOS)
 brew install cmake sdl2
 
+# Install SDL2 (Ubuntu/Debian)
+sudo apt install cmake libsdl2-dev
+
 # Build
 cd RecklessDrivin-SDL
 mkdir build && cd build
@@ -80,9 +83,11 @@ cmake --build .
 # Run (macOS: double-click or from terminal)
 open RecklessDrivin.app
 
+# Run (Linux)
+./RecklessDrivin
 ```
 
-On macOS, the build produces a self-contained `RecklessDrivin.app` bundle with the original game icon, the `Data` file, and SDL2 bundled inside. The app is ad-hoc code signed automatically.
+On macOS, the build produces a self-contained `RecklessDrivin.app` bundle with the original game icon, the `Data` file, and SDL2 bundled inside. The app is ad-hoc code signed automatically. On Linux, it builds a standard executable and copies `Data` next to it.
 
 ### Distribution
 

@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SDL2
+        run: brew install sdl2
+      - name: Build
+        run: |
+          mkdir build && cd build
+          cmake ..
+          cmake --build .
+      - name: Verify app bundle
+        run: |
+          test -d build/RecklessDrivin.app
+          test -f build/RecklessDrivin.app/Contents/MacOS/RecklessDrivin
+          test -f build/RecklessDrivin.app/Contents/Resources/Data
+          test -f build/RecklessDrivin.app/Contents/Resources/Reckless.icns
+          test -f build/RecklessDrivin.app/Contents/Frameworks/libSDL2.dylib
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SDL2
+        run: sudo apt-get update && sudo apt-get install -y libsdl2-dev
+      - name: Build
+        run: |
+          mkdir build && cd build
+          cmake ..
+          cmake --build .
+      - name: Verify binary
+        run: |
+          test -f build/RecklessDrivin
+          test -f build/Data
