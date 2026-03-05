@@ -211,10 +211,10 @@ int LoadLevel()
 			ShowPicScreen(1005);
 			WaitForPress();
 			BeQuiet();
-			InitInterface();
 			/* ShowCursor() - handled by platform layer */
 			if(!gLCheat)
 				CheckHighScore(gPlayerScore);
+			InitInterface();
 			return false;
 		}
 
@@ -560,8 +560,8 @@ void EndGame()
 	BeQuiet();
 	SimplePlaySound(152);
 	GameOverAnim();
-	InitInterface();
 	/* ShowCursor() - handled by platform layer */
 	if(!gLCheat)
 		CheckHighScore(gPlayerScore);
+	InitInterface();
 }
