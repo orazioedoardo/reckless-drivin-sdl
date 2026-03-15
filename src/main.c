@@ -14,6 +14,7 @@
 
 #include <SDL.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
@@ -100,7 +101,20 @@ static const char* FindDataFile(const char *argv0)
         }
     }
 
-    /* Strategy 2: current working directory */
+    /* Strategy 2: AppImage assets directory */
+    {
+        const char *env_var = "DATA_FILE_PATH";
+        char *path = getenv(env_var);
+        if (path != NULL) {
+            FILE *f = fopen(path, "rb");
+            if (f) {
+                fclose(f);
+                return path;
+            }
+        }
+    }
+
+    /* Strategy 3: current working directory */
     {
         FILE *f = fopen("Data", "rb");
         if (f) {
@@ -109,7 +123,7 @@ static const char* FindDataFile(const char *argv0)
         }
     }
 
-    /* Strategy 3: parent directory (common in development) */
+    /* Strategy 4: parent directory (common in development) */
     {
         FILE *f = fopen("../RecklessDrivin/Data", "rb");
         if (f) {
