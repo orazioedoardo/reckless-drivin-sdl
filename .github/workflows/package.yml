@@ -19,6 +19,7 @@ jobs:
           ref: main
 
       - name: Compile Linux ${{ matrix.platform.name }} app
+        run: |
           sudo apt update
           sudo apt install -y desktop-file-utils libsdl2-dev
           ./build-linux-app.sh
