@@ -3,6 +3,22 @@ name: Package
 on: [workflow_dispatch]
 
 jobs:
+  package-macos:
+    runs-on: macos-13
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Compile macOS universal app
+        run: ./build-mac-app.sh
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mac-build-universal
+          path: RecklessDrivin-*-mac.dmg
+
   package-linux:
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 15
