@@ -85,7 +85,9 @@ cd reckless-drivin-sdl
 open build/RecklessDrivin.app
 ```
 
-The build produces a self-contained `RecklessDrivin.app` bundle with an upscaled icon, the `Data` file, and SDL2 bundled inside.
+The build produces a self-contained `RecklessDrivin.app` bundle with an upscaled icon, the `Data` file, and SDL2 bundled inside. To distribute the app, just share the `.dmg` file inside the `build` directory, no SDL2 install required on the recipient's machine.
+
+Since the app is not signed, macOS will quarantine it when downloaded. Recipients need to go open the app, go to System Settings -> Privacy and security -> Scroll down and whitelist the app.
 
 ### Build & Run on Linux
 
@@ -107,10 +109,6 @@ cmake --build .
 ```
 
 The build produces a standard executable and copies `Data` next to it.
-
-### Distribution
-
-Just share the `.dmg` file inside the `build` directory; no SDL2 install required on the recipient's machine. Since the app is not signed, macOS will quarantine it when downloaded. Recipients need to go open the app, go to System Settings -> Privacy and security -> Scroll down and whitelist the app.
 
 ---
 
