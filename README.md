@@ -353,6 +353,8 @@ RecklessDrivin-SDL/
 
 **Built with:** [Claude Code](https://claude.ai/code)
 
+**macOS Big Sur icon, packaging & CI:** [orazioedoardo](https://github.com/orazioedoardo) (universal macOS builds, Linux AppImages, DMG packaging)
+
 **LZRW3-A compression:** Ross Williams (public domain)
 
 **SDL2:** [libsdl.org](https://www.libsdl.org/)
