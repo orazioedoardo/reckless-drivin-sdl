@@ -1,0 +1,46 @@
+name: Package
+
+on: [workflow_dispatch]
+
+jobs:
+  package-macos:
+    runs-on: macos-14
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Compile macOS universal app
+        run: ./build-mac-app.sh
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: mac-build-universal
+          path: build/RecklessDrivin-*-mac.dmg
+
+  package-linux:
+    runs-on: ${{ matrix.platform.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { name: x86_64, os: ubuntu-22.04 }
+          - { name: aarch64, os: ubuntu-22.04-arm }
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Compile Linux ${{ matrix.platform.name }} app
+        run: |
+          sudo apt update
+          sudo apt install -y desktop-file-utils libsdl2-dev
+          ./build-linux-app.sh
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: linux-build-${{ matrix.platform.name }}
+          path: build/RecklessDrivin-*-linux-${{ matrix.platform.name }}.AppImage

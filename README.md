@@ -68,46 +68,47 @@ This is the result: a port of Reckless Drivin' with all 10 levels, every screen,
 | **Build tool** | CMake 3.16+ |
 | **Library** | SDL2 |
 
-### Build & Run
+### Build & Run on macOS
 
 ```bash
-# Install SDL2 (macOS)
-brew install cmake sdl2
+# Install CMake
+brew install cmake
 
-# Install SDL2 (Ubuntu/Debian)
-sudo apt install cmake libsdl2-dev
+# Clone repository
+git clone https://github.com/DarrCoh/reckless-drivin-sdl.git
 
 # Build
-cd RecklessDrivin-SDL
+cd reckless-drivin-sdl
+./build-mac-app.sh
+
+# Run (double-click or from terminal)
+open build/RecklessDrivin.app
+```
+
+The build produces a self-contained `RecklessDrivin.app` bundle with an upscaled icon, the `Data` file, and SDL2 bundled inside. To distribute the app, just share the `.dmg` file inside the `build` directory, no SDL2 install required on the recipient's machine.
+
+Since the app is not signed, macOS will quarantine it when downloaded. Recipients need to go open the app, go to System Settings -> Privacy and security -> Scroll down and whitelist the app.
+
+### Build & Run on Linux
+
+```bash
+# Install CMake and SDL2 (Ubuntu/Debian)
+sudo apt install cmake libsdl2-dev
+
+# Clone repository
+git clone https://github.com/DarrCoh/reckless-drivin-sdl.git
+
+# Build
+cd reckless-drivin-sdl
 mkdir build && cd build
 cmake ..
 cmake --build .
 
-# Run (macOS: double-click or from terminal)
-open RecklessDrivin.app
-
-# Run (Linux)
+# Run
 ./RecklessDrivin
 ```
 
-On macOS, the build produces a self-contained `RecklessDrivin.app` bundle with the original game icon, the `Data` file, and SDL2 bundled inside. The app is ad-hoc code signed automatically. On Linux, it builds a standard executable and copies `Data` next to it.
-
-### Distribution
-
-To share the game, just zip the `.app` and send it; no SDL2 install required on the recipient's machine:
-
-```bash
-cd build
-zip -r RecklessDrivin.zip RecklessDrivin.app
-```
-
-Since the app is ad-hoc signed (no Apple Developer ID), macOS will quarantine it when downloaded. Recipients need to run this once in Terminal before the first launch:
-
-```bash
-xattr -cr /path/to/RecklessDrivin.app
-```
-
-(Tip: type `xattr -cr ` then drag the app onto the Terminal window to fill in the path.)
+The build produces a standard executable and copies `Data` next to it.
 
 ---
 

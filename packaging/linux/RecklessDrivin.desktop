@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=RecklessDrivin
+Comment=A native SDL2 port of the classic Mac OS racing game
+Exec=RecklessDrivin
+StartupNotify=true
+Terminal=false
+Icon=RecklessDrivin
+Type=Application
+Categories=Game;ArcadeGame;
