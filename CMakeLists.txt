@@ -141,18 +141,6 @@ if(APPLE)
             "$<TARGET_FILE_DIR:RecklessDrivin>/../Resources/Data"
         COMMENT "Copying Data file into app bundle Resources"
     )
-
-    add_custom_command(
-        TARGET RecklessDrivin POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory
-            "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${SDL2_FRAMEWORK}"
-            "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks/SDL2.framework"
-        COMMAND ${CMAKE_COMMAND} -E remove_directory
-            "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks/SDL2.framework/Headers"
-        COMMENT "Bundling SDL2 Framework into app"
-    )
 else()
     add_custom_command(
         TARGET RecklessDrivin POST_BUILD

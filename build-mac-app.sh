@@ -25,6 +25,10 @@ cmake -S . -B build
 cmake --build build -j "$(sysctl -n hw.logicalcpu)"
 pushd build
 
+mkdir -p RecklessDrivin.app/Contents/Frameworks
+cp -a SDL2.framework RecklessDrivin.app/Contents/Frameworks/
+find RecklessDrivin.app -type d -name Headers -exec rm -rf {} +
+
 sw_version="1.0.2"
 
 sed -i '' "s/CHANGEME_SW_VERSION/$sw_version/" RecklessDrivin.app/Contents/Info.plist
