@@ -11,13 +11,16 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
+      - name: Install SDL2
+        run: brew install sdl2
       - name: Build
         run: |
-          ./build-mac-app.sh
+          mkdir build && cd build
+          cmake ..
+          cmake --build .
       - name: Verify app bundle
         run: |
           test -d build/RecklessDrivin.app
-          test -d build/RecklessDrivin.app/Contents/Frameworks/SDL2.framework
           test -f build/RecklessDrivin.app/Contents/MacOS/RecklessDrivin
           test -f build/RecklessDrivin.app/Contents/Resources/Data
           test -f build/RecklessDrivin.app/Contents/Resources/Reckless.icns

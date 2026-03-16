@@ -5,12 +5,7 @@ if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version")
 endif()
 
-project(RecklessDrivin C)
-
-# Cross-compile for Intel Macs too
-if(APPLE)
-    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
-endif()
+project(RecklessDrivin VERSION 1.0.2 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -23,19 +18,23 @@ endif()
 # Enable Link-Time Optimization for Release builds
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 
-# Find SDL2 - try pkg-config first, then find_package
+# Find SDL2 - try framework first on macOS, then pkg-config, then find_package
 if(APPLE)
-    find_library(SDL2_FRAMEWORK SDL2
-        PATHS "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" "/Library/Frameworks"
-        PATH_SUFFIXES SDL2.framework
+    # Look for SDL2.framework in the build dir (placed by build-mac-app.sh)
+    # or standard system locations. Only match actual .framework bundles.
+    find_path(SDL2_FRAMEWORK_DIR SDL2.framework
+        PATHS "${CMAKE_BINARY_DIR}" "${CMAKE_SOURCE_DIR}" "/Library/Frameworks"
+        NO_DEFAULT_PATH
     )
-
-    if(NOT SDL2_FRAMEWORK)
-        message(FATAL_ERROR "SDL2.framework not found")
+    if(SDL2_FRAMEWORK_DIR)
+        set(SDL2_FRAMEWORK "${SDL2_FRAMEWORK_DIR}/SDL2.framework")
+        message(STATUS "Found SDL2.framework at: ${SDL2_FRAMEWORK}")
+        # Official SDL2.framework is universal; build a fat binary
+        set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
     endif()
+endif()
 
-    message(STATUS "Found SDL2.framework at: ${SDL2_FRAMEWORK}")
-else()
+if(NOT SDL2_FRAMEWORK)
     find_package(PkgConfig QUIET)
     if(PKG_CONFIG_FOUND)
         pkg_check_modules(SDL2 IMPORTED_TARGET sdl2)
@@ -94,6 +93,8 @@ if(APPLE)
         MACOSX_BUNDLE_EXECUTABLE_NAME RecklessDrivin
         MACOSX_BUNDLE_ICON_FILE Reckless
         MACOSX_BUNDLE_BUNDLE_NAME "Reckless Drivin'"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION}
+        MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     )
 else()
     add_executable(RecklessDrivin ${SOURCES})
@@ -113,18 +114,16 @@ target_compile_definitions(RecklessDrivin PRIVATE SDL_PORT=1)
 target_compile_options(RecklessDrivin PRIVATE -Wall)
 
 # Link libraries
-if(APPLE)
+if(SDL2_FRAMEWORK)
     target_link_libraries(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/SDL2)
     target_include_directories(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/Headers)
+elseif(TARGET PkgConfig::SDL2)
+    target_link_libraries(RecklessDrivin PRIVATE PkgConfig::SDL2 m)
+elseif(TARGET SDL2::SDL2)
+    target_link_libraries(RecklessDrivin PRIVATE SDL2::SDL2 m)
 else()
-    if(TARGET PkgConfig::SDL2)
-        target_link_libraries(RecklessDrivin PRIVATE PkgConfig::SDL2 m)
-    elseif(TARGET SDL2::SDL2)
-        target_link_libraries(RecklessDrivin PRIVATE SDL2::SDL2 m)
-    else()
-        target_link_libraries(RecklessDrivin PRIVATE ${SDL2_LIBRARIES} m)
-        target_include_directories(RecklessDrivin PRIVATE ${SDL2_INCLUDE_DIRS})
-    endif()
+    target_link_libraries(RecklessDrivin PRIVATE ${SDL2_LIBRARIES} m)
+    target_include_directories(RecklessDrivin PRIVATE ${SDL2_INCLUDE_DIRS})
 endif()
 
 # macOS-specific: link Cocoa framework (needed by SDL2)

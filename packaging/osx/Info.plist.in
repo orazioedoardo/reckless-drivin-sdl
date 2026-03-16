@@ -8,8 +8,10 @@
     <string>Reckless Drivin'</string>
     <key>CFBundleIdentifier</key>
     <string>com.jonasechterhoff.recklessdrivin</string>
+    <key>CFBundleVersion</key>
+    <string>${MACOSX_BUNDLE_BUNDLE_VERSION}</string>
     <key>CFBundleShortVersionString</key>
-    <string>CHANGEME_SW_VERSION</string>
+    <string>${MACOSX_BUNDLE_SHORT_VERSION_STRING}</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>

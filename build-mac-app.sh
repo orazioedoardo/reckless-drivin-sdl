@@ -32,5 +32,4 @@ find RecklessDrivin.app -type l -name Headers -exec rm -rf {} +
 
 sw_version="1.0.2"
 
-sed -i '' "s/CHANGEME_SW_VERSION/$sw_version/" RecklessDrivin.app/Contents/Info.plist
 hdiutil create -fs HFS+ -srcfolder RecklessDrivin.app -volname "RecklessDrivin $sw_version" "RecklessDrivin-$sw_version-mac.dmg"
