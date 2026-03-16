@@ -7,6 +7,11 @@ endif()
 
 project(RecklessDrivin C)
 
+# Cross-compile for Intel Macs too
+if(APPLE)
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+endif()
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
@@ -81,6 +86,10 @@ if(APPLE)
     set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     add_executable(RecklessDrivin MACOSX_BUNDLE ${SOURCES} ${ICON_FILE})
     set_target_properties(RecklessDrivin PROPERTIES
+        MACOSX_RPATH TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "@executable_path/../Frameworks"
+
         MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/packaging/osx/Info.plist.in
         MACOSX_BUNDLE_EXECUTABLE_NAME RecklessDrivin
         MACOSX_BUNDLE_ICON_FILE Reckless
@@ -104,14 +113,14 @@ target_compile_definitions(RecklessDrivin PRIVATE SDL_PORT=1)
 target_compile_options(RecklessDrivin PRIVATE -Wall)
 
 # Link libraries
-if(TARGET PkgConfig::SDL2)
-    target_link_libraries(RecklessDrivin PRIVATE PkgConfig::SDL2 m)
-elseif(TARGET SDL2::SDL2)
-    target_link_libraries(RecklessDrivin PRIVATE SDL2::SDL2 m)
+if(APPLE)
+    target_link_libraries(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/SDL2)
+    target_include_directories(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/Headers)
 else()
-    if(APPLE)
-        target_link_libraries(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/SDL2)
-        target_include_directories(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/Headers)
+    if(TARGET PkgConfig::SDL2)
+        target_link_libraries(RecklessDrivin PRIVATE PkgConfig::SDL2 m)
+    elseif(TARGET SDL2::SDL2)
+        target_link_libraries(RecklessDrivin PRIVATE SDL2::SDL2 m)
     else()
         target_link_libraries(RecklessDrivin PRIVATE ${SDL2_LIBRARIES} m)
         target_include_directories(RecklessDrivin PRIVATE ${SDL2_INCLUDE_DIRS})
@@ -125,12 +134,6 @@ endif()
 
 # Copy the Data file next to the executable (inside .app bundle on macOS)
 if(APPLE)
-    set_target_properties(RecklessDrivin PROPERTIES
-        MACOSX_RPATH TRUE
-        BUILD_WITH_INSTALL_RPATH TRUE
-        INSTALL_RPATH "@executable_path/../Frameworks"
-    )
-
     add_custom_command(
         TARGET RecklessDrivin POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

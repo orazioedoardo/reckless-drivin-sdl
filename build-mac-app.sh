@@ -22,7 +22,7 @@ hdiutil detach "$mount_point"
 
 popd
 cmake -S . -B build
-cmake --build build -j "$(nproc)"
+cmake --build build -j "$(sysctl -n hw.logicalcpu)"
 pushd build
 
 sw_version="1.0.2"
