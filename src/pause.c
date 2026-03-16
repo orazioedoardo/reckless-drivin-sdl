@@ -31,6 +31,7 @@ void PauseGame()
 		   Platform_IsKeyDown(SDL_SCANCODE_ESCAPE)||
 		   Platform_GetMouseClick(NULL,NULL))
 			end=true;
+		Platform_Blit2Screen();
 		SDL_Delay(16);
 	}
 
