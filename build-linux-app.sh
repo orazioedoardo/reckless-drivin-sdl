@@ -7,7 +7,7 @@ pushd build
 
 system_arch="$(uname -m)"
 
-sw_version="1.0.2"
+sw_version="1.0.3"
 
 appimagetool_version="1.9.1"
 appimagetool_filename="appimagetool-$system_arch.AppImage"
