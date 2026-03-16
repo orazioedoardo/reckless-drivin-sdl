@@ -19,12 +19,25 @@ endif()
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 
 # Find SDL2 - try pkg-config first, then find_package
-find_package(PkgConfig QUIET)
-if(PKG_CONFIG_FOUND)
-    pkg_check_modules(SDL2 IMPORTED_TARGET sdl2)
-endif()
-if(NOT SDL2_FOUND)
-    find_package(SDL2 REQUIRED)
+if(APPLE)
+    find_library(SDL2_FRAMEWORK SDL2
+        PATHS "${CMAKE_SOURCE_DIR}" "${CMAKE_BINARY_DIR}" "/Library/Frameworks"
+        PATH_SUFFIXES SDL2.framework
+    )
+
+    if(NOT SDL2_FRAMEWORK)
+        message(FATAL_ERROR "SDL2.framework not found")
+    endif()
+
+    message(STATUS "Found SDL2.framework at: ${SDL2_FRAMEWORK}")
+else()
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(SDL2 IMPORTED_TARGET sdl2)
+    endif()
+    if(NOT SDL2_FOUND)
+        find_package(SDL2 REQUIRED)
+    endif()
 endif()
 
 # Source files
@@ -64,11 +77,11 @@ set(SOURCES
 
 # macOS app bundle: include icon as a resource
 if(APPLE)
-    set(ICON_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Reckless.icns)
+    set(ICON_FILE ${CMAKE_CURRENT_SOURCE_DIR}/packaging/osx/Reckless.icns)
     set_source_files_properties(${ICON_FILE} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
     add_executable(RecklessDrivin MACOSX_BUNDLE ${SOURCES} ${ICON_FILE})
     set_target_properties(RecklessDrivin PROPERTIES
-        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in
+        MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/packaging/osx/Info.plist.in
         MACOSX_BUNDLE_EXECUTABLE_NAME RecklessDrivin
         MACOSX_BUNDLE_ICON_FILE Reckless
         MACOSX_BUNDLE_BUNDLE_NAME "Reckless Drivin'"
@@ -96,8 +109,13 @@ if(TARGET PkgConfig::SDL2)
 elseif(TARGET SDL2::SDL2)
     target_link_libraries(RecklessDrivin PRIVATE SDL2::SDL2 m)
 else()
-    target_link_libraries(RecklessDrivin PRIVATE ${SDL2_LIBRARIES} m)
-    target_include_directories(RecklessDrivin PRIVATE ${SDL2_INCLUDE_DIRS})
+    if(APPLE)
+        target_link_libraries(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/SDL2)
+        target_include_directories(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/Headers)
+    else()
+        target_link_libraries(RecklessDrivin PRIVATE ${SDL2_LIBRARIES} m)
+        target_include_directories(RecklessDrivin PRIVATE ${SDL2_INCLUDE_DIRS})
+    endif()
 endif()
 
 # macOS-specific: link Cocoa framework (needed by SDL2)
@@ -107,6 +125,12 @@ endif()
 
 # Copy the Data file next to the executable (inside .app bundle on macOS)
 if(APPLE)
+    set_target_properties(RecklessDrivin PROPERTIES
+        MACOSX_RPATH TRUE
+        BUILD_WITH_INSTALL_RPATH TRUE
+        INSTALL_RPATH "@executable_path/../Frameworks"
+    )
+
     add_custom_command(
         TARGET RecklessDrivin POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -114,48 +138,17 @@ if(APPLE)
             "$<TARGET_FILE_DIR:RecklessDrivin>/../Resources/Data"
         COMMENT "Copying Data file into app bundle Resources"
     )
-    # Bundle SDL2 dylib so the .app is fully self-contained
-    find_library(SDL2_DYLIB_PATH SDL2 HINTS
-        /opt/homebrew/lib /usr/local/lib /opt/local/lib
-        ENV DYLD_LIBRARY_PATH
-    )
-    if(SDL2_DYLIB_PATH)
-        # Resolve symlinks and get the install name at configure time
-        get_filename_component(SDL2_DYLIB_REAL "${SDL2_DYLIB_PATH}" REALPATH)
-        execute_process(
-            COMMAND otool -D "${SDL2_DYLIB_REAL}"
-            OUTPUT_VARIABLE SDL2_INSTALL_NAME
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        # otool -D output: first line is the file path, second line is the install name
-        string(REGEX REPLACE ".*\n" "" SDL2_INSTALL_NAME "${SDL2_INSTALL_NAME}")
-        message(STATUS "SDL2 dylib: ${SDL2_DYLIB_REAL}")
-        message(STATUS "SDL2 install name: ${SDL2_INSTALL_NAME}")
-        add_custom_command(
-            TARGET RecklessDrivin POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E make_directory
-                "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks"
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${SDL2_DYLIB_REAL}"
-                "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks/libSDL2.dylib"
-            COMMAND chmod u+w
-                "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks/libSDL2.dylib"
-            COMMAND install_name_tool -change
-                "${SDL2_INSTALL_NAME}"
-                "@executable_path/../Frameworks/libSDL2.dylib"
-                "$<TARGET_FILE:RecklessDrivin>"
-            COMMAND install_name_tool -id
-                "@executable_path/../Frameworks/libSDL2.dylib"
-                "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks/libSDL2.dylib"
-            COMMENT "Bundling SDL2 dylib into app"
-        )
-    endif()
-    # Ad-hoc sign so macOS doesn't show the prohibition overlay
+
     add_custom_command(
         TARGET RecklessDrivin POST_BUILD
-        COMMAND xattr -cr "$<TARGET_BUNDLE_DIR:RecklessDrivin>"
-        COMMAND codesign --force --deep -s - "$<TARGET_BUNDLE_DIR:RecklessDrivin>"
-        COMMENT "Ad-hoc signing app bundle"
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${SDL2_FRAMEWORK}"
+            "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks/SDL2.framework"
+        COMMAND ${CMAKE_COMMAND} -E remove_directory
+            "$<TARGET_BUNDLE_DIR:RecklessDrivin>/Contents/Frameworks/SDL2.framework/Headers"
+        COMMENT "Bundling SDL2 Framework into app"
     )
 else()
     add_custom_command(
