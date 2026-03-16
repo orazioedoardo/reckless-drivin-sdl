@@ -8,8 +8,6 @@
     <string>Reckless Drivin'</string>
     <key>CFBundleIdentifier</key>
     <string>com.jonasechterhoff.recklessdrivin</string>
-    <key>CFBundleVersion</key>
-    <string>1.0</string>
     <key>CFBundleShortVersionString</key>
     <string>CHANGEME_SW_VERSION</string>
     <key>CFBundlePackageType</key>
