@@ -57,20 +57,18 @@ void Platform_PlaySound(int channelId, const void *sampleData, int sampleLen,
                         float volume, float pan, float pitch,
                         int bitsPerSample);
 void Platform_StopChannel(int channelId);
+int  Platform_IsChannelActive(int channelId);
 void Platform_SetChannelVolume(int channelId, float left, float right);
 void Platform_SetChannelPitch(int channelId, float pitch);
 
 enum {
     kAudioChannel0 = 0,
-    kAudioChannel1,
-    kAudioChannel2,
-    kAudioChannel3,
-    kAudioChannel4,
-    kAudioChannel5,
-    kAudioChannelEngine,
+    kAudioChannelEngine = 16,
     kAudioChannelSkid,
     kNumAudioChannels
 };
+
+#define kNumSFXChannels 16  /* SFX channels: 0 through 15 */
 
 /* Timing */
 UInt64 Platform_GetMicroseconds(void);

@@ -81,6 +81,13 @@ void SetHighScoreEntry(int index, UInt32 score)
 		inputLen = 6;
 	}
 
+	/* Cache the background once to avoid re-decoding (and double-presenting) each frame */
+	ShowPicScreen(1004);
+	fb = Platform_GetFramebuffer(&rowBytes);
+	fbStride = rowBytes / 2;
+	UInt16 bgCache[SCREEN_WIDTH * SCREEN_HEIGHT];
+	memcpy(bgCache, fb, sizeof(bgCache));
+
 	Platform_ShowCursor();
 	Platform_FlushInput();
 	SDL_StartTextInput();
@@ -115,10 +122,8 @@ void SetHighScoreEntry(int index, UInt32 score)
 			}
 		}
 
-		/* Draw the name entry screen */
-		ShowPicScreen(1004);
-		fb = Platform_GetFramebuffer(&rowBytes);
-		fbStride = rowBytes / 2;
+		/* Restore cached background (no present) */
+		memcpy(fb, bgCache, sizeof(bgCache));
 
 		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 140, "NEW HIGH SCORE!", COL_YELLOW, 3);
 
@@ -176,7 +181,7 @@ void CheckHighScore(UInt32 score)
 {
 	int i;
 	if(gLevelResFile)return;
-	for(i=kNumHighScoreEntrys;score>gPrefs.high[i-1].score&&i>0;i--);
+	for(i=kNumHighScoreEntrys;i>0&&score>gPrefs.high[i-1].score;i--);
 	if(i<kNumHighScoreEntrys)
 	{
 		BlockMoveData(gPrefs.high+i,gPrefs.high+i+1,sizeof(tScoreRecord)*(kNumHighScoreEntrys-i-1));

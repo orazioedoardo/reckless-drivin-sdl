@@ -42,7 +42,7 @@ This is the result: a port of Reckless Drivin' with all 10 levels, every screen,
 - **All 10 levels fully playable:** including the encrypted shareware levels, properly decrypted with the [free registration key](http://jonasechterhoff.com/Reckless_Drivin.html)
 - **24 driveable vehicles:** sports cars, muscle cars, motorcycles, semi trucks, a tank, a helicopter, police interceptors, boats, and more; all selectable via the cheat mode level select
 - **Pixel-perfect rendering:** 640x480 ARGB1555, software-rendered and uploaded via SDL2 streaming texture
-- **Full audio:** 8-channel software mixer at 44.1 kHz stereo, with Doppler effect and 3D positional sound
+- **Full audio:** 18-channel software mixer at 44.1 kHz stereo, with Doppler effect and 3D positional sound
 - **Every screen implemented:** main menu, help, high scores, preferences, pause, game over, and scrolling credits
 - **High score table:** top 10 scores rendered on-screen with keyboard name entry
 - **Screen transitions:** fade to/from black, venetian-blind shift-in effect, game over animation
@@ -123,7 +123,7 @@ xattr -cr /path/to/RecklessDrivin.app
 | Steer Right | `Right` |
 | Kickdown | `Left Shift` |
 | Brake | `Space` |
-| Fire | `Z` |
+| Mine | `Z` |
 | Missile | `X` |
 | Pause | `P` |
 | Quit | `Escape` |
@@ -192,7 +192,7 @@ The original game used five major Mac-specific APIs. Every one had to be replace
 |---|---|---|
 | DrawSprocket | Screen management, page flipping, gamma fades | SDL2 window + renderer + streaming texture |
 | InputSprocket | Gamepad/keyboard input abstraction | SDL2 event polling + keyboard state + mouse |
-| Sound Manager | Multi-channel audio mixing | Custom 8-channel software mixer |
+| Sound Manager | Multi-channel audio mixing | Custom 18-channel software mixer |
 | Resource Manager | Loading assets from resource forks | Custom resource fork parser |
 | DriverServices | High-resolution timing | `SDL_GetPerformanceCounter()` |
 

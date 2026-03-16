@@ -305,7 +305,7 @@ void ConfigureInput(void)
 {
     static const char *kElementNames[] = {
         "Forward", "Backward", "Left", "Right",
-        "Kickdown", "Brake", "Fire", "Missile"
+        "Kickdown", "Brake", "Mine", "Missile"
     };
     #define kNumBindable 8  /* kForward through kMissile */
     #define kConfigDone  kNumBindable

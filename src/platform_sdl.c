@@ -91,12 +91,6 @@ void Platform_InitScreen(void)
         return;
     }
 
-    /*
-     * Let SDL handle letterboxing automatically when the window is resized
-     * to a non-4:3 aspect ratio.
-     */
-    SDL_RenderSetLogicalSize(sRenderer, SCREEN_WIDTH, SCREEN_HEIGHT);
-
     /* Use nearest-neighbor scaling for crisp pixel art. */
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
 
@@ -171,7 +165,21 @@ void Platform_Blit2Screen(void)
 
     SDL_SetTextureColorMod(sTexture, sFadeBrightness, sFadeBrightness, sFadeBrightness);
     SDL_RenderClear(sRenderer);
-    SDL_RenderCopy(sRenderer, sTexture, NULL, NULL);
+
+    /* Scale to fit window while preserving 4:3 aspect ratio (letterbox if needed) */
+    int outW, outH;
+    SDL_GetRendererOutputSize(sRenderer, &outW, &outH);
+    float scaleX = (float)outW / SCREEN_WIDTH;
+    float scaleY = (float)outH / SCREEN_HEIGHT;
+    float scale  = (scaleX < scaleY) ? scaleX : scaleY;
+
+    SDL_Rect dst;
+    dst.w = (int)(SCREEN_WIDTH  * scale);
+    dst.h = (int)(SCREEN_HEIGHT * scale);
+    dst.x = (outW - dst.w) / 2;
+    dst.y = (outH - dst.h) / 2;
+
+    SDL_RenderCopy(sRenderer, sTexture, NULL, &dst);
     SDL_RenderPresent(sRenderer);
 }
 
@@ -834,6 +842,17 @@ void Platform_StopChannel(int channelId)
     SDL_LockMutex(sMixMutex);
     sChannels[channelId].active = 0;
     SDL_UnlockMutex(sMixMutex);
+}
+
+int Platform_IsChannelActive(int channelId)
+{
+    if (channelId < 0 || channelId >= kNumAudioChannels)
+        return 0;
+    int active;
+    SDL_LockMutex(sMixMutex);
+    active = sChannels[channelId].active;
+    SDL_UnlockMutex(sMixMutex);
+    return active;
 }
 
 void Platform_SetChannelVolume(int channelId, float left, float right)
