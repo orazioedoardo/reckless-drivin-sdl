@@ -5,7 +5,7 @@
 #include "input.h"
 
 #define kNumHighScoreEntrys	10
-#define kPrefsVersion 4
+#define kPrefsVersion 5
 
 typedef struct{
 	Str15 name;
@@ -16,7 +16,7 @@ typedef struct{
 typedef struct{
 	UInt16 version;
 	UInt16 volume;
-	UInt8  sound,engineSound,hqSound,unused1;
+	UInt8  sound,engineSound,hqSound,skidSound;
 	UInt8  lineSkip,motionBlur,hiColor;
 	UInt8 hidElements[kNumElements];
 	UInt8  unused[11];

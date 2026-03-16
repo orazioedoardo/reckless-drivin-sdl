@@ -26,6 +26,7 @@ static void SetDefaults(void)
     gPrefs.volume = 200;
     gPrefs.sound = 1;
     gPrefs.engineSound = 1;
+    gPrefs.skidSound = 1;
     gPrefs.hqSound = 0;
     gPrefs.hiColor = 1;     /* we only support 16-bit */
     gPrefs.lineSkip = 0;
@@ -112,6 +113,7 @@ extern void ConfigureInput(void);
 enum {
     kPrefSound = 0,
     kPrefEngineSound,
+    kPrefSkidSound,
     kPrefHQSound,
     kPrefVolume,
     kPrefMotionBlur,
@@ -123,6 +125,7 @@ enum {
 static const char *kPrefLabels[kPrefCount] = {
     "Sound",
     "Engine Sound",
+    "Skid Sound",
     "HQ Sound",
     "Volume",
     "Motion Blur",
@@ -141,6 +144,7 @@ void Preferences(void)
     /* Work on a copy of settings so we can cancel */
     UInt8 snd        = gPrefs.sound;
     UInt8 engSnd     = gPrefs.engineSound;
+    UInt8 skidSnd    = gPrefs.skidSound;
     UInt8 hqSnd      = gPrefs.hqSound;
     UInt16 volume    = gPrefs.volume;
     UInt8 motionBlur = gPrefs.motionBlur;
@@ -187,6 +191,7 @@ void Preferences(void)
                 switch (i) {
                     case kPrefSound:       val = snd ? "ON" : "OFF"; break;
                     case kPrefEngineSound: val = engSnd ? "ON" : "OFF"; break;
+                    case kPrefSkidSound:   val = skidSnd ? "ON" : "OFF"; break;
                     case kPrefHQSound:     val = hqSnd ? "ON" : "OFF"; break;
                     case kPrefMotionBlur:  val = motionBlur ? "ON" : "OFF"; break;
                     case kPrefVolume: {
@@ -236,6 +241,7 @@ void Preferences(void)
                 /* Save current settings before entering controls */
                 gPrefs.sound = snd;
                 gPrefs.engineSound = engSnd;
+                gPrefs.skidSound = skidSnd;
                 gPrefs.hqSound = hqSnd;
                 gPrefs.volume = volume;
                 gPrefs.motionBlur = motionBlur;
@@ -282,6 +288,7 @@ void Preferences(void)
             switch (selected) {
                 case kPrefSound:       snd = !snd; break;
                 case kPrefEngineSound: engSnd = !engSnd; break;
+                case kPrefSkidSound:   skidSnd = !skidSnd; break;
                 case kPrefHQSound:     hqSnd = !hqSnd; break;
                 case kPrefMotionBlur:  motionBlur = !motionBlur; break;
                 case kPrefVolume: {
@@ -300,6 +307,7 @@ void Preferences(void)
     /* Save settings */
     gPrefs.sound = snd;
     gPrefs.engineSound = engSnd;
+    gPrefs.skidSound = skidSnd;
     gPrefs.hqSound = hqSnd;
     gPrefs.volume = volume;
     gPrefs.motionBlur = motionBlur;

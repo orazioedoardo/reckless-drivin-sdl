@@ -23,8 +23,7 @@
 /* Constants (from original)                                                 */
 /* ======================================================================== */
 
-#define kNumChannels      3
-#define kNumHQChannels    6
+#define kNumSoundChannels kNumSFXChannels
 #define kMaxPanDist       400.0f
 #define kMaxListenDist    1250.0f
 #define kDopplerFactor    0.004f
@@ -65,7 +64,7 @@ typedef struct {
 float gVolume;
 int   gGear;
 
-static UInt32 sChannelPriority[kNumHQChannels];
+static UInt32 sChannelPriority[kNumSoundChannels];
 static int sAudioInited = 0;
 static int sEngineNeedsRetrigger = 1;
 static int sSkidNeedsRetrigger   = 1;
@@ -271,7 +270,7 @@ void InitChannels(void)
         sAudioInited = 1;
     }
 
-    for (int i = 0; i < kNumHQChannels; i++)
+    for (int i = 0; i < kNumSoundChannels; i++)
         sChannelPriority[i] = 0;
 
     sEngineNeedsRetrigger = 1;
@@ -280,8 +279,7 @@ void InitChannels(void)
 
 void BeQuiet(void)
 {
-    int numChan = gPrefs.hqSound ? kNumHQChannels : kNumChannels;
-    for (int i = 0; i < numChan; i++) {
+    for (int i = 0; i < kNumSoundChannels; i++) {
         Platform_StopChannel(kAudioChannel0 + i);
         sChannelPriority[i] = 0;
     }
@@ -298,11 +296,15 @@ void BeQuiet(void)
 
 static int PickChannel(UInt32 *outPriority)
 {
-    int numChan = gPrefs.hqSound ? kNumHQChannels : kNumChannels;
+    int numChan = kNumSoundChannels;
     int bestChan = 0;
     UInt32 bestPri = 0xFFFFFFFF;
 
     for (int i = 0; i < numChan; i++) {
+        /* Clear stale priority if the channel has finished playing */
+        if (sChannelPriority[i] && !Platform_IsChannelActive(kAudioChannel0 + i))
+            sChannelPriority[i] = 0;
+
         if (sChannelPriority[i] < bestPri) {
             bestPri = sChannelPriority[i];
             bestChan = i;
@@ -319,7 +321,9 @@ static int PickChannel(UInt32 *outPriority)
 
 void SetCarSound(float engine, float skidL, float skidR, float velo)
 {
-    if (!gPrefs.engineSound || !gPrefs.sound)
+    if (!gPrefs.sound)
+        return;
+    if (!gPrefs.engineSound && !gPrefs.skidSound)
         return;
 
     float engineVol, gearVelo;
@@ -350,7 +354,7 @@ void SetCarSound(float engine, float skidL, float skidR, float velo)
         engineVol = 0;
 
     /* Re-trigger engine loop if needed */
-    if (sEngineNeedsRetrigger) {
+    if (gPrefs.engineSound && sEngineNeedsRetrigger) {
         int entrySize;
         tSound *sound = (tSound *)GetSortedPackEntry(kPackSnds, 132, &entrySize);
         if (sound) {
@@ -369,12 +373,15 @@ void SetCarSound(float engine, float skidL, float skidR, float velo)
     }
 
     /* Set engine volume and pitch */
-    {
+    if (gPrefs.engineSound) {
         float vol = 0.28f * engineVol * gVolume;
         Platform_SetChannelVolume(kAudioChannelEngine, vol, vol);
         float pitch = 0.2f + 0.3f * engine + 0.2f * velo + 0.3f * gearVelo;
         Platform_SetChannelPitch(kAudioChannelEngine, pitch);
     }
+
+    if (!gPrefs.skidSound)
+        return;
 
     /* Skid processing */
     skidL -= kMinSqueakSlide;
@@ -434,7 +441,7 @@ void StartCarChannels(void)
     sEngineNeedsRetrigger = 1;
     sSkidNeedsRetrigger   = 1;
 
-    if (gPrefs.engineSound && gPrefs.sound) {
+    if (gPrefs.sound && gPrefs.engineSound) {
         int engEntrySize;
         tSound *sound = (tSound *)GetSortedPackEntry(kPackSnds, 132, &engEntrySize);
         if (sound) {
@@ -450,23 +457,23 @@ void StartCarChannels(void)
                 sEngineNeedsRetrigger = 0;
             }
         }
+    }
 
-        {
-            int skidEntrySize;
-            sound = (tSound *)GetSortedPackEntry(kPackSnds,
-                        (*gRoadInfo).skidSound, &skidEntrySize);
-            if (sound) {
-                int sampleLen, bps;
-                float pitchAdj;
-                UInt32 ns = SoundNumSamples(sound);
-                int idx = (ns > 0) ? RanInt(0, ns) : 0;
-                const UInt8 *sampleData = GetSampleData(sound, idx, skidEntrySize,
-                                                        &sampleLen, &pitchAdj, &bps);
-                if (sampleData && sampleLen > 0) {
-                    Platform_PlaySound(kAudioChannelSkid, sampleData, sampleLen,
-                                       0.0f, 0.0f, pitchAdj, bps);
-                    sSkidNeedsRetrigger = 0;
-                }
+    if (gPrefs.sound && gPrefs.skidSound) {
+        int skidEntrySize;
+        tSound *sound = (tSound *)GetSortedPackEntry(kPackSnds,
+                    (*gRoadInfo).skidSound, &skidEntrySize);
+        if (sound) {
+            int sampleLen, bps;
+            float pitchAdj;
+            UInt32 ns = SoundNumSamples(sound);
+            int idx = (ns > 0) ? RanInt(0, ns) : 0;
+            const UInt8 *sampleData = GetSampleData(sound, idx, skidEntrySize,
+                                                    &sampleLen, &pitchAdj, &bps);
+            if (sampleData && sampleLen > 0) {
+                Platform_PlaySound(kAudioChannelSkid, sampleData, sampleLen,
+                                   0.0f, 0.0f, pitchAdj, bps);
+                sSkidNeedsRetrigger = 0;
             }
         }
     }
