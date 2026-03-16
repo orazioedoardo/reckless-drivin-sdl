@@ -51,7 +51,7 @@ This is the result: a port of Reckless Drivin' with all 10 levels, every screen,
 - **Gamepad support:** SDL2 GameController API with analog stick + triggers
 - **Resizable window:** maintains 4:3 aspect ratio with letterboxing
 - **Persistent preferences:** settings, high scores, lap records, and key bindings saved between sessions
-- **Native macOS app bundle:** builds as a proper `.app` with the original 2002 icon, ad-hoc signed, SDL2 bundled inside; zip it and send to a friend
+- **Native macOS app bundle:** builds as a proper `.app` with SDL2 bundled inside; distribute as a DMG or zip it and send to a friend
 - **Broad compatibility:** macOS 11.0+ (Big Sur through current), Linux (x86_64, ARM64)
 - **No external dependencies on macOS:** SDL2 is bundled into the app automatically; no Homebrew or manual installs needed to run
 
@@ -85,9 +85,9 @@ cd reckless-drivin-sdl
 open build/RecklessDrivin.app
 ```
 
-The build produces a self-contained `RecklessDrivin.app` bundle with an upscaled icon, the `Data` file, and SDL2 bundled inside. To distribute the app, just share the `.dmg` file inside the `build` directory, no SDL2 install required on the recipient's machine.
+The build produces a self-contained `RecklessDrivin.app` bundle with the `Data` file and SDL2 bundled inside, plus a `.dmg` for easy distribution. No SDL2 install required on the recipient's machine.
 
-Since the app is not signed, macOS will quarantine it when downloaded. Recipients need to go open the app, go to System Settings -> Privacy and security -> Scroll down and whitelist the app.
+Since the app is not notarized, macOS will quarantine it when downloaded. Recipients can either run `xattr -cr /path/to/RecklessDrivin.app` in Terminal, or open it and go to System Settings > Privacy & Security to allow it.
 
 ### Build & Run on Linux
 
@@ -245,7 +245,7 @@ A performance audit of the finished port found it was mostly clean: no memory le
 
 ### The App Bundle
 
-The original Reckless Drivin' was a proper Mac application: double-clickable, with an icon in the Dock. The SDL port should be too. CMake builds a native `.app` bundle on macOS: `Info.plist` for metadata, the original 2002 `.icns` icon recovered from an old copy of the game, the `Data` file in `Contents/Resources`, and critically, SDL2 itself bundled inside `Contents/Frameworks`. At build time, `install_name_tool` rewrites the executable's dynamic library reference from the Homebrew path (`/opt/homebrew/opt/sdl2/lib/...`) to `@executable_path/../Frameworks/libSDL2.dylib`, making the app fully self-contained. The whole bundle is ad-hoc code signed so macOS doesn't overlay a prohibition symbol on the Dock icon. The deployment target is set to macOS 11.0 (Big Sur), the first macOS release with Apple Silicon support, so the app runs on every Apple Silicon Mac ever made. The goal was a `.app` you can zip and send to a friend.
+The original Reckless Drivin' was a proper Mac application: double-clickable, with an icon in the Dock. The SDL port should be too. CMake builds a native `.app` bundle on macOS: `Info.plist` for metadata, the `Data` file in `Contents/Resources`, and SDL2.framework bundled inside `Contents/Frameworks`. The build script downloads the official SDL2 universal framework and produces a fat binary (arm64 + x86_64), so the app runs on both Apple Silicon and Intel Macs. The deployment target is macOS 11.0 (Big Sur), the first macOS release with Apple Silicon support. A packaging script produces a `.dmg` for easy distribution.
 
 </details>
 
@@ -290,10 +290,13 @@ The original Reckless Drivin' was a proper Mac application: double-clickable, wi
 ```
 RecklessDrivin-SDL/
 ├── CMakeLists.txt           # Build configuration (app bundle + SDL2 bundling on macOS)
-├── Info.plist.in            # macOS app bundle metadata template
-├── Reckless.icns            # Original 2002 game icon (from Jonas Echterhoff)
 ├── README.md
 ├── Data                     # Original game resources (Mac resource fork)
+├── build-mac-app.sh         # macOS build + DMG packaging script
+├── build-linux-app.sh       # Linux build + AppImage packaging script
+├── packaging/
+│   ├── osx/                 # macOS: Info.plist template, icons (Big Sur + original 2002)
+│   └── linux/               # Linux: AppRun, desktop entry, icon
 ├── include/
 │   ├── compat.h             # Mac OS type compatibility layer
 │   ├── platform.h           # SDL2 platform abstraction API
