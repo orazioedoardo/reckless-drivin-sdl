@@ -34,4 +34,3 @@ sw_version="1.0.2"
 
 sed -i '' "s/CHANGEME_SW_VERSION/$sw_version/" RecklessDrivin.app/Contents/Info.plist
 hdiutil create -fs HFS+ -srcfolder RecklessDrivin.app -volname "RecklessDrivin $sw_version" "RecklessDrivin-$sw_version-mac.dmg"
-rm -r RecklessDrivin.app
