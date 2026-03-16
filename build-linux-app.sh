@@ -2,6 +2,9 @@
 
 set -xe
 
+mkdir -p build
+pushd build
+
 system_arch="$(uname -m)"
 
 sw_version="1.0.2"
@@ -32,17 +35,19 @@ required_libs=(
 	libXss.so.1
 )
 
+popd
 cmake -S . -B build
 cmake --build build -j "$(nproc)"
-chmod 0644 build/Data
+pushd build
 
 mkdir -p RecklessDrivin.AppDir/usr/{bin,lib,share/{applications,assets}}
 
-cp -a build/Data RecklessDrivin.AppDir/usr/share/assets/
-cp -a build/RecklessDrivin RecklessDrivin.AppDir/usr/bin/
-cp -a packaging/linux/{AppRun,RecklessDrivin.desktop} RecklessDrivin.AppDir/
-cp -a packaging/linux/Icon_128x128.png RecklessDrivin.AppDir/RecklessDrivin.png
-cp -a packaging/linux/RecklessDrivin.desktop RecklessDrivin.AppDir/usr/share/applications/
+cp -a Data RecklessDrivin.AppDir/usr/share/assets/
+cp -a RecklessDrivin RecklessDrivin.AppDir/usr/bin/
+
+cp -a ../packaging/linux/{AppRun,RecklessDrivin.desktop} RecklessDrivin.AppDir/
+cp -a ../packaging/linux/Icon_128x128.png RecklessDrivin.AppDir/RecklessDrivin.png
+cp -a ../packaging/linux/RecklessDrivin.desktop RecklessDrivin.AppDir/usr/share/applications/
 
 for lib in "${required_libs[@]}"; do
 	cp -a -L "/lib/$system_arch-linux-gnu/$lib" RecklessDrivin.AppDir/usr/lib/
