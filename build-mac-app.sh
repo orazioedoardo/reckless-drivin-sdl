@@ -30,6 +30,6 @@ cp -a SDL2.framework RecklessDrivin.app/Contents/Frameworks/
 find RecklessDrivin.app -type d -name Headers -exec rm -rf {} +
 find RecklessDrivin.app -type l -name Headers -exec rm -rf {} +
 
-sw_version="1.0.3"
+sw_version="$(sed -n 's/^project(RecklessDrivin VERSION \([0-9.]*\).*/\1/p' ../CMakeLists.txt)"
 
 hdiutil create -fs HFS+ -srcfolder RecklessDrivin.app -volname "RecklessDrivin $sw_version" "RecklessDrivin-$sw_version-mac.dmg"

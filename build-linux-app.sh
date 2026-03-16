@@ -7,7 +7,7 @@ pushd build
 
 system_arch="$(uname -m)"
 
-sw_version="1.0.3"
+sw_version="$(sed -n 's/^project(RecklessDrivin VERSION \([0-9.]*\).*/\1/p' ../CMakeLists.txt)"
 
 appimagetool_version="1.9.1"
 appimagetool_filename="appimagetool-$system_arch.AppImage"
