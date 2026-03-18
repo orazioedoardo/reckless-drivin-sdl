@@ -99,8 +99,8 @@ static Ptr DrawBorderZoomed(Ptr drawPos,int xDrawStart,int x1,int x2,int y,Ptr d
 
 static Ptr DrawBorderLineZoomed(Ptr drawPos,int xDrawStart,int x1,int x2,int y,Ptr data,Ptr leftBorder,Ptr rightBorder,float zoom)
 {
-	int leftBordEnd=x1+16/zoom;
-	int rightBordEnd=x2-16/zoom;
+	int leftBordEnd=x1+(int)(16/zoom);
+	int rightBordEnd=x2-(int)(16/zoom);
 	if(leftBordEnd>rightBordEnd)
 	{
 		leftBordEnd=x1+((x2-x1)>>1);
