@@ -190,11 +190,11 @@ void *LZRW_Decompress(const void *compressedData, long compressedSize, long *out
 void LZRWDecodeHandle(Handle *h, long compressedSize) {
     if (!h || !*h) return;
 
-    char *compressed = **h;
+    unsigned char *compressed = **h;
     if (!compressed) return;
 
     long decompressed_size = 0;
-    void *decompressed = LZRW_Decompress(compressed, compressedSize, &decompressed_size);
+    void *decompressed = LZRW_Decompress((char *)compressed, compressedSize, &decompressed_size);
     if (!decompressed) {
         fprintf(stderr, "LZRWDecodeHandle: decompression failed\n");
         return;
@@ -202,7 +202,7 @@ void LZRWDecodeHandle(Handle *h, long compressedSize) {
 
     /* Replace the handle's data buffer */
     free(**h);
-    **h = (char *)decompressed;
+    **h = (unsigned char *)decompressed;
 
     /* Update the tracked size */
     Resources_SetSize(*h, decompressed_size);

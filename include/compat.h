@@ -21,8 +21,8 @@ typedef int8_t    SInt8;
 typedef int16_t   SInt16;
 typedef int32_t   SInt32;
 typedef int64_t   SInt64;
-typedef char*     Ptr;
-typedef char**    Handle;
+typedef unsigned char* Ptr;
+typedef unsigned char** Handle;
 typedef int       Boolean;
 typedef int       OSErr;
 typedef uint32_t  FourCharCode;
@@ -78,9 +78,9 @@ static inline void DisposePtr(Ptr p) { free(p); }
 /* Handle emulation - we store: [4 bytes size][data...] and the Handle points to a pointer to data */
 static inline Handle NewHandle(long size) {
     /* Allocate a block: pointer-to-data + actual data */
-    char **h = (char**)malloc(sizeof(char*));
+    unsigned char **h = (unsigned char**)malloc(sizeof(unsigned char*));
     if (!h) return nil;
-    *h = (char*)malloc(size);
+    *h = (unsigned char*)malloc(size);
     if (!*h) { free(h); return nil; }
     memset(*h, 0, size);
     return (Handle)h;

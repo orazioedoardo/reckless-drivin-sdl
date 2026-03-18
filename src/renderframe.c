@@ -480,7 +480,7 @@ void DrawTracksZoomed16(float xDrawStart,float yDrawStart,float zoom)
 	UInt32 shiftClip=gXSize-size<<16;
 	int i;
 	int y1Clip=yDrawStart-(gYSize-(gFinishDelay?0:kInvLines))*zoom;
-	UInt16 *textures=GetUnsortedPackEntry(kPackTx16,(*gRoadInfo).tracks,0);
+	UInt16 *textures=(UInt16*)GetUnsortedPackEntry(kPackTx16,(*gRoadInfo).tracks,0);
 	for(i=0;i<gTrackCount;i++)
 	{
 		if(gTracks[i].p2.y<=yDrawStart+size&&gTracks[i].p1.y>y1Clip&&gTracks[i].time+kTrackLifeTime+kTrackDeathDuration>gFrameCount)
@@ -558,7 +558,7 @@ void DrawMarksZoomed16(float xDrawStart,float yDrawStart,float zoom)
 	UInt32 shiftClip=gXSize-size<<16;
 	int i;
 	int y1Clip=yDrawStart-(gYSize-(gFinishDelay?0:kInvLines))*zoom;
-	UInt16 *texture=GetUnsortedPackEntry(kPackTx16,(*gRoadInfo).marks,0);
+	UInt16 *texture=(UInt16*)GetUnsortedPackEntry(kPackTx16,(*gRoadInfo).marks,0);
 	int l=0,r=gMarkSize;
   	while(r-1>l)
 		if(gMarks[(l+r)/2].p1.y+gMarks[(l+r)/2].p2.y>yDrawStart*2+kMaxMarkLength)

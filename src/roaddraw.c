@@ -266,7 +266,7 @@ Ptr DrawLineZoomed16(UInt16 *drawPos,int xDrawStart,int x1,int x2,int y,int xDri
 	UInt32 dudx;
 	if(x1<0)x1=0;
 	if(x2>gXSize)x2=gXSize;
-	if(x2<x1) return drawPos;
+	if(x2<x1) return (Ptr)drawPos;
 	v=(-y+yDrift&0x007f)<<7;
 	u=((int)(x1*zoom+xDrawStart+xDrift)&0x007f)<<8;
 	x2-=x1;
@@ -278,7 +278,7 @@ Ptr DrawLineZoomed16(UInt16 *drawPos,int xDrawStart,int x1,int x2,int y,int xDri
 		u+=dudx;
 		x2--;
 	}
-	return drawPos;
+	return (Ptr)drawPos;
 }
 
 Ptr DrawBorderZoomed16(UInt16 *drawPos,int xDrawStart,int x1,int x2,int y,UInt16 *data,float zoom)
@@ -286,13 +286,13 @@ Ptr DrawBorderZoomed16(UInt16 *drawPos,int xDrawStart,int x1,int x2,int y,UInt16
 	UInt32 dudx;
 	UInt32 v=(-y&0x007f)<<4;
 	UInt32 u=0;
-	if(x2<0) return drawPos;
+	if(x2<0) return (Ptr)drawPos;
 	if(x1<0){
 		u=-x1*256*zoom;
 		x1=0;
 	}
 	if(x2>gXSize)x2=gXSize;
-	if(x2<x1) return drawPos;
+	if(x2<x1) return (Ptr)drawPos;
 	x2-=x1;
 	data+=v;
 	dudx=(int)(zoom*256);
@@ -302,7 +302,7 @@ Ptr DrawBorderZoomed16(UInt16 *drawPos,int xDrawStart,int x1,int x2,int y,UInt16
 		u+=dudx;
 		x2--;
 	}
-	return drawPos;
+	return (Ptr)drawPos;
 }
 
 Ptr DrawBorderLineZoomed16(Ptr drawPos,int xDrawStart,int x1,int x2,int y,Ptr data,Ptr leftBorder,Ptr rightBorder,float zoom)
@@ -314,9 +314,9 @@ Ptr DrawBorderLineZoomed16(Ptr drawPos,int xDrawStart,int x1,int x2,int y,Ptr da
 		leftBordEnd=x1+((x2-x1)>>1);
 		rightBordEnd=leftBordEnd;
 	}
-	drawPos=DrawBorderZoomed16(drawPos,xDrawStart,x1,leftBordEnd,y,leftBorder,zoom);
-	drawPos=DrawLineZoomed16(drawPos,xDrawStart,leftBordEnd,rightBordEnd,y,gXDriftPos,gYDriftPos,data,zoom);
-	return DrawBorderZoomed16(drawPos,xDrawStart,rightBordEnd,x2,y,rightBorder,zoom);
+	drawPos=DrawBorderZoomed16((UInt16*)drawPos,xDrawStart,x1,leftBordEnd,y,(UInt16*)leftBorder,zoom);
+	drawPos=DrawLineZoomed16((UInt16*)drawPos,xDrawStart,leftBordEnd,rightBordEnd,y,gXDriftPos,gYDriftPos,(UInt16*)data,zoom);
+	return DrawBorderZoomed16((UInt16*)drawPos,xDrawStart,rightBordEnd,x2,y,(UInt16*)rightBorder,zoom);
 }
 
 void DrawRoadZoomed16(float xDrawStart,float yDrawStart,float zoom)
@@ -353,9 +353,9 @@ void DrawRoadZoomed16(float xDrawStart,float yDrawStart,float zoom)
 		roadData[2]=((floorPerc*(*floorRoad)[2]+(1-floorPerc)*(*ceilRoad)[2])-xDrawStart)*invZoom;
 		roadData[3]=((floorPerc*(*floorRoad)[3]+(1-floorPerc)*(*ceilRoad)[3])-xDrawStart)*invZoom;
 		drawPos=DrawBorderLineZoomed16(drawPos,xDrawStart,0x80000000,roadData[0],worldY,backgrTex,leftBorder,rightBorder,zoom);
-		drawPos=DrawLineZoomed16(drawPos,xDrawStart,roadData[0],roadData[1],worldY,gXFrontDriftPos,gYFrontDriftPos,roadTex,zoom);
+		drawPos=DrawLineZoomed16((UInt16*)drawPos,xDrawStart,roadData[0],roadData[1],worldY,gXFrontDriftPos,gYFrontDriftPos,(UInt16*)roadTex,zoom);
 		drawPos=DrawBorderLineZoomed16(drawPos,xDrawStart,roadData[1],roadData[2],worldY,backgrTex,leftBorder,rightBorder,zoom);
-		drawPos=DrawLineZoomed16(drawPos,xDrawStart,roadData[2],roadData[3],worldY,gXFrontDriftPos,gYFrontDriftPos,roadTex,zoom);
+		drawPos=DrawLineZoomed16((UInt16*)drawPos,xDrawStart,roadData[2],roadData[3],worldY,gXFrontDriftPos,gYFrontDriftPos,(UInt16*)roadTex,zoom);
 		drawPos=DrawBorderLineZoomed16(drawPos,xDrawStart,roadData[3],0x7fffffff,worldY,backgrTex,leftBorder,rightBorder,zoom);		
 		drawPos+=rowBytesSkip;
 	}
