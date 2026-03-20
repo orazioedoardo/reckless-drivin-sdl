@@ -18,30 +18,10 @@
  */
 
 #include "platform.h"
+#include "preferences.h"
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-
-/* ========================================================================= */
-/* Forward declarations of game element enums (from input.h)                 */
-/* We redefine them here so this file compiles standalone.                    */
-/* The actual values must match those in the game's input.h.                  */
-/* ========================================================================= */
-#ifndef kNumElements
-enum {
-    kForward = 0,
-    kBackward,
-    kLeft,
-    kRight,
-    kKickdown,
-    kBrake,
-    kFire,
-    kMissile,
-    kAbort,
-    kPause,
-    kNumElements
-};
-#endif
 
 /* ========================================================================= */
 /*  Screen subsystem                                                          */
@@ -68,13 +48,22 @@ void Platform_InitScreen(void)
         return;
     }
 
-    sWindow = SDL_CreateWindow(
-        "Reckless Drivin'",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        SCREEN_WIDTH, SCREEN_HEIGHT,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
-    );
+    {
+        int winW = gPrefs.unused[0] | (gPrefs.unused[1] << 8);
+        int winH = gPrefs.unused[2] | (gPrefs.unused[3] << 8);
+        if (!winW) winW = SCREEN_WIDTH;
+        if (!winH) winH = SCREEN_HEIGHT;
+        Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+        if (gPrefs.unused[4])
+            flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+        sWindow = SDL_CreateWindow(
+            "Reckless Drivin'",
+            SDL_WINDOWPOS_CENTERED,
+            SDL_WINDOWPOS_CENTERED,
+            winW, winH,
+            flags
+        );
+    }
     if (!sWindow) {
         fprintf(stderr, "[platform] SDL_CreateWindow failed: %s\n",
                 SDL_GetError());
@@ -122,6 +111,26 @@ void Platform_ShutdownScreen(void)
     if (sTexture)  { SDL_DestroyTexture(sTexture);   sTexture  = NULL; }
     if (sRenderer) { SDL_DestroyRenderer(sRenderer);  sRenderer = NULL; }
     if (sWindow)   { SDL_DestroyWindow(sWindow);      sWindow   = NULL; }
+}
+
+void Platform_ToggleFullscreen(void)
+{
+    if (!sWindow) return;
+    Uint32 flags = SDL_GetWindowFlags(sWindow);
+    if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
+        SDL_SetWindowFullscreen(sWindow, 0);
+        gPrefs.unused[4] = 0;
+    } else {
+        /* Save windowed size before going fullscreen */
+        int w, h;
+        SDL_GetWindowSize(sWindow, &w, &h);
+        gPrefs.unused[0] = (UInt8)(w & 0xFF);
+        gPrefs.unused[1] = (UInt8)((w >> 8) & 0xFF);
+        gPrefs.unused[2] = (UInt8)(h & 0xFF);
+        gPrefs.unused[3] = (UInt8)((h >> 8) & 0xFF);
+        SDL_SetWindowFullscreen(sWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
+        gPrefs.unused[4] = 1;
+    }
 }
 
 /*
@@ -387,7 +396,21 @@ void Platform_PollEvents(void)
         case SDL_WINDOWEVENT:
             if (ev.window.event == SDL_WINDOWEVENT_RESIZED && sWindow) {
                 Platform_ScaleToFitWindow();
+                /* Save windowed size (not during fullscreen) */
+                if (!(SDL_GetWindowFlags(sWindow) & SDL_WINDOW_FULLSCREEN_DESKTOP)) {
+                    int w = ev.window.data1, h = ev.window.data2;
+                    gPrefs.unused[0] = (UInt8)(w & 0xFF);
+                    gPrefs.unused[1] = (UInt8)((w >> 8) & 0xFF);
+                    gPrefs.unused[2] = (UInt8)(h & 0xFF);
+                    gPrefs.unused[3] = (UInt8)((h >> 8) & 0xFF);
+                }
             }
+            break;
+
+        case SDL_KEYDOWN:
+            if (ev.key.keysym.scancode == SDL_SCANCODE_F11 ||
+                ((ev.key.keysym.mod & KMOD_ALT) && ev.key.keysym.scancode == SDL_SCANCODE_RETURN))
+                Platform_ToggleFullscreen();
             break;
 
         case SDL_MOUSEBUTTONDOWN:

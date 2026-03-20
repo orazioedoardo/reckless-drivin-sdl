@@ -18,6 +18,7 @@ void Platform_InitScreen(void);
 void Platform_ShutdownScreen(void);
 void Platform_Blit2Screen(void);
 void Platform_ScaleToFitWindow(void);
+void Platform_ToggleFullscreen(void);
 void Platform_FadeScreen(int fade);
 void Platform_ScreenClear(void);
 

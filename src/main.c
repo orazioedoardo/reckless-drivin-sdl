@@ -159,6 +159,10 @@ static void Init(const char *argv0)
     }
     fprintf(stderr, "[init] Loaded resources from: %s\n", dataPath);
 
+    /* Load preferences before creating the window (for saved size/fullscreen) */
+    LoadPrefs();
+    gPrefs.hiColor = 1;  /* Force 16-bit — the only mode we support */
+
     /* Initialize the SDL screen/window and set up framebuffer globals */
     Platform_InitScreen();
     {
@@ -172,10 +176,6 @@ static void Init(const char *argv0)
 
     /* We are not on classic Mac OS X */
     gOSX = 0;
-
-    /* Load preferences from disk (or initialize with defaults if no file) */
-    LoadPrefs();
-    gPrefs.hiColor = 1;  /* Force 16-bit — the only mode we support */
 
     /* The game is now free/open source - set registered unconditionally */
     gRegistered = 1;
