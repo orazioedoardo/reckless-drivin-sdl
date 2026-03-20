@@ -169,6 +169,7 @@ void Platform_Blit2Screen(void)
 
 void Platform_ScaleToFitWindow(void)
 {
+    if (!sRenderer || !sTexture) return;
     SDL_RenderClear(sRenderer);
 
     /* Scale to fit window while preserving 4:3 aspect ratio (letterbox if needed) */
