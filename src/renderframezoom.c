@@ -60,10 +60,10 @@ static Ptr DrawLineZoomed(Ptr drawPos,int xDrawStart,int x1,int x2,int y,int xDr
 	if(x2>gXSize)x2=gXSize;
 	if(x2<x1) return drawPos;
 	v=(-y+yDrift&0x007f)<<7;
-	u=((int)(x1*zoom+xDrawStart+xDrift)&0x007f)<<8;
+	u=(int)((x1*zoom+xDrawStart+xDrift)*256.0f)&0x7fff;
 	x2-=x1;
 	data+=v;
-	dudx=(int)(zoom*256);
+	dudx=(int)(zoom*256.0f+0.5f);
 	while(x2)
 	{
 		*(drawPos++)=data[((u>>8)&0x007f)];
@@ -87,7 +87,7 @@ static Ptr DrawBorderZoomed(Ptr drawPos,int xDrawStart,int x1,int x2,int y,Ptr d
 	if(x2<x1) return drawPos;
 	x2-=x1;
 	data+=v;
-	dudx=(int)(zoom*256);
+	dudx=(int)(zoom*256.0f+0.5f);
 	while(x2)
 	{
 		*(drawPos++)=data[u>>8];
