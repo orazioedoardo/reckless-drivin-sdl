@@ -164,6 +164,11 @@ void Platform_Blit2Screen(void)
     }
 
     SDL_SetTextureColorMod(sTexture, sFadeBrightness, sFadeBrightness, sFadeBrightness);
+    Platform_ScaleToFitWindow();
+}
+
+void Platform_ScaleToFitWindow(void)
+{
     SDL_RenderClear(sRenderer);
 
     /* Scale to fit window while preserving 4:3 aspect ratio (letterbox if needed) */
@@ -380,12 +385,7 @@ void Platform_PollEvents(void)
 
         case SDL_WINDOWEVENT:
             if (ev.window.event == SDL_WINDOWEVENT_RESIZED && sWindow) {
-                /* Enforce 4:3 aspect ratio on resize. */
-                int w = ev.window.data1;
-                int h = ev.window.data2;
-                int newH = (w * SCREEN_HEIGHT) / SCREEN_WIDTH;
-                if (newH != h)
-                    SDL_SetWindowSize(sWindow, w, newH);
+                Platform_ScaleToFitWindow();
             }
             break;
 
