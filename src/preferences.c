@@ -47,7 +47,10 @@ static void SetDefaults(void)
     gPrefs.keyCodes[kKickdown] = SDL_SCANCODE_LSHIFT;
     gPrefs.keyCodes[kBrake]    = SDL_SCANCODE_SPACE;
     gPrefs.keyCodes[kFire]     = SDL_SCANCODE_Z;
-    gPrefs.keyCodes[kMissile]  = SDL_SCANCODE_X;
+    gPrefs.keyCodes[kMissile]  = SDL_SCANCODE_A;
+
+    /* Default to fullscreen */
+    gPrefs.unused[4] = 1;
 
     /* Lap records all set to 999.0 */
     {

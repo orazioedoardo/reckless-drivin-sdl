@@ -125,7 +125,7 @@ The build produces a standard executable and copies `Data` next to it.
 | Kickdown | `Left Shift` |
 | Brake | `Space` |
 | Mine | `Z` |
-| Missile | `X` |
+| Missile | `A` |
 | Pause | `P` |
 | Quit | `Escape` |
 
