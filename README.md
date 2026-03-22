@@ -150,7 +150,7 @@ Copy `SDL2.dll` from `vcpkg/installed/x64-windows/bin/` next to the exe if distr
 | Kickdown | `Left Shift` |
 | Brake | `Space` |
 | Mine | `Z` |
-| Missile | `X` |
+| Missile | `A` |
 | Pause | `P` |
 | Quit | `Escape` |
 
