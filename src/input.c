@@ -305,9 +305,9 @@ void ConfigureInput(void)
 {
     static const char *kElementNames[] = {
         "Forward", "Backward", "Left", "Right",
-        "Kickdown", "Brake", "Mine", "Missile"
+        "Kickdown", "Brake", "Missile", "Mine"
     };
-    #define kNumBindable 8  /* kForward through kMissile */
+    #define kNumBindable 8  /* kForward through kMine */
     #define kConfigDone  kNumBindable
 
     int rowBytes;
@@ -329,14 +329,14 @@ void ConfigureInput(void)
         TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 50, "CONTROLS", COL_WHITE, 3);
 
         int baseY = 120;
-        int itemH = 34;
+        int itemH = 32;
 
         for (int i = 0; i <= kConfigDone; i++) {
             int y = baseY + i * itemH;
             UInt16 labelCol = (i == selected) ? COL_YELLOW : COL_WHITE;
 
             if (i == selected)
-                TR_FillRect(fb, fbStride, 120, y - 4, 400, 26, COL_GRAY);
+                TR_FillRect(fb, fbStride, 120, y - 6, 400, 26, COL_GRAY);
 
             if (i == kConfigDone) {
                 TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, y, "[ Done ]", labelCol, 2);
@@ -354,7 +354,8 @@ void ConfigureInput(void)
             }
         }
 
-        TR_DrawString(fb, fbStride, 130, 430, "Enter: Rebind   Esc: Back", COL_GRAY, 2);
+        TR_DrawString(fb, fbStride, 130, 408, "Enter: Rebind", COL_GRAY, 2);
+        TR_DrawString(fb, fbStride, 130, 440, "Esc: Back", COL_GRAY, 2);
 
         Platform_Blit2Screen();
 

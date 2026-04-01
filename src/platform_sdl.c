@@ -288,9 +288,9 @@ static const SDL_GameControllerButton sElementPadButton[kNumElements] = {
     SDL_CONTROLLER_BUTTON_DPAD_LEFT,    /* kLeft     */
     SDL_CONTROLLER_BUTTON_DPAD_RIGHT,   /* kRight    */
     SDL_CONTROLLER_BUTTON_LEFTSHOULDER, /* kKickdown */
-    SDL_CONTROLLER_BUTTON_A,            /* kBrake    */
-    SDL_CONTROLLER_BUTTON_X,            /* kFire     */
+    SDL_CONTROLLER_BUTTON_B,            /* kBrake    */
     SDL_CONTROLLER_BUTTON_Y,            /* kMissile  */
+    SDL_CONTROLLER_BUTTON_A,            /* kFire     */
     SDL_CONTROLLER_BUTTON_BACK,         /* kAbort    */
     SDL_CONTROLLER_BUTTON_START         /* kPause    */
 };
@@ -325,8 +325,8 @@ void Platform_InitInput(void)
     sElementKeys[kRight]     = SDL_SCANCODE_RIGHT;
     sElementKeys[kKickdown]  = SDL_SCANCODE_LSHIFT;
     sElementKeys[kBrake]     = SDL_SCANCODE_SPACE;
+    sElementKeys[kMissile]   = SDL_SCANCODE_A;
     sElementKeys[kFire]      = SDL_SCANCODE_Z;
-    sElementKeys[kMissile]   = SDL_SCANCODE_X;
     sElementKeys[kAbort]     = SDL_SCANCODE_ESCAPE;
     sElementKeys[kPause]     = SDL_SCANCODE_P;
 

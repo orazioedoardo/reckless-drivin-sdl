@@ -21,14 +21,11 @@ void ShowHighScores(int hilite)
 	fb = Platform_GetFramebuffer(&rowBytes);
 	fbStride = rowBytes / 2;
 
-	/* Title */
-	TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 120, "HIGH SCORES", COL_WHITE, 3);
-
 	/* Draw each score entry */
 	for (i = 0; i < kNumHighScoreEntrys; i++)
 	{
-		int y = 175 + i * 28;
-		UInt16 color = (i == hilite) ? COL_YELLOW : COL_CYAN;
+		int y = 155 + i * 32;
+		UInt16 color = (i == hilite) ? COL_YELLOW : COL_WHITE;
 		char name[17];
 		char scoreBuf[16];
 		char rankBuf[8];
@@ -125,13 +122,13 @@ void SetHighScoreEntry(int index, UInt32 score)
 		/* Restore cached background (no present) */
 		memcpy(fb, bgCache, sizeof(bgCache));
 
-		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 140, "NEW HIGH SCORE!", COL_YELLOW, 3);
+		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 155, "NEW HIGH SCORE!", COL_YELLOW, 3);
 
 		char scoreBuf[32];
 		snprintf(scoreBuf, sizeof(scoreBuf), "Score: %u", (unsigned)score);
-		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 190, scoreBuf, COL_WHITE, 2);
+		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 195, scoreBuf, COL_WHITE, 2);
 
-		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 240, "Enter your name:", COL_WHITE, 2);
+		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 243, "Enter your name:", COL_WHITE, 2);
 
 		/* Input field background */
 		int fieldX = 180;
@@ -151,7 +148,7 @@ void SetHighScoreEntry(int index, UInt32 score)
 			}
 		}
 
-		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 330, "Press ENTER to confirm", COL_GRAY, 2);
+		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 319, "Press ENTER to confirm", COL_WHITE, 2);
 
 		Platform_Blit2Screen();
 		SDL_Delay(16);

@@ -46,8 +46,8 @@ static void SetDefaults(void)
     gPrefs.keyCodes[kRight]    = SDL_SCANCODE_RIGHT;
     gPrefs.keyCodes[kKickdown] = SDL_SCANCODE_LSHIFT;
     gPrefs.keyCodes[kBrake]    = SDL_SCANCODE_SPACE;
-    gPrefs.keyCodes[kFire]     = SDL_SCANCODE_Z;
     gPrefs.keyCodes[kMissile]  = SDL_SCANCODE_A;
+    gPrefs.keyCodes[kFire]     = SDL_SCANCODE_Z;
 
     /* Default to fullscreen */
     gPrefs.unused[4] = 1;
@@ -125,8 +125,8 @@ enum {
     kPrefEngineSound,
     kPrefSkidSound,
     kPrefHQSound,
-    kPrefVolume,
     kPrefMotionBlur,
+    kPrefVolume,
     kPrefControls,
     kPrefDone,
     kPrefCount
@@ -137,8 +137,8 @@ static const char *kPrefLabels[kPrefCount] = {
     "Engine Sound",
     "Skid Sound",
     "HQ Sound",
-    "Volume",
     "Motion Blur",
+    "Volume",
     "Controls",
     "Done"
 };
@@ -174,7 +174,7 @@ void Preferences(void)
 
         /* Menu items */
         int baseY = 120;
-        int itemH = 36;
+        int itemH = 32;
         int labelX = 140;
         int valueX = 400;
 
@@ -184,7 +184,7 @@ void Preferences(void)
 
             /* Highlight bar for selected item */
             if (i == selected)
-                TR_FillRect(fb, fbStride, 120, y - 4, 400, 28, COL_GRAY);
+                TR_FillRect(fb, fbStride, 120, y - 6, 400, 28, COL_GRAY);
 
             if (i == kPrefDone) {
                 /* Center the "Done" label */
@@ -210,8 +210,8 @@ void Preferences(void)
                         int barW = 120;
                         int barH = 16;
                         int filled = (volume * barW) / 256;
-                        TR_FillRect(fb, fbStride, barX, y + 4, barW, barH, COL_BAR_BG);
-                        TR_FillRect(fb, fbStride, barX, y + 4, filled, barH, COL_BAR_FG);
+                        TR_FillRect(fb, fbStride, barX, y, barW, barH, COL_BAR_BG);
+                        TR_FillRect(fb, fbStride, barX, y, filled, barH, COL_BAR_FG);
                         /* Numeric value */
                         char numBuf[8];
                         snprintf(numBuf, sizeof(numBuf), "%d", volume);
@@ -226,8 +226,9 @@ void Preferences(void)
         }
 
         /* Instructions */
-        TR_DrawString(fb, fbStride, 130, 390, "Up/Down: Select", COL_GRAY, 2);
-        TR_DrawString(fb, fbStride, 130, 416, "Left/Right: Change   Enter: Done", COL_GRAY, 2);
+        TR_DrawString(fb, fbStride, 130, 376, "Up/Down: Select", COL_GRAY, 2);
+        TR_DrawString(fb, fbStride, 130, 408, "Left/Right: Change", COL_GRAY, 2);
+        TR_DrawString(fb, fbStride, 130, 440, "Enter: Done", COL_GRAY, 2);
 
         Platform_Blit2Screen();
 
