@@ -21,8 +21,8 @@ enum{
 	kRight,
 	kKickdown,
 	kBrake,
-	kFire,
 	kMissile,
+	kFire,
 	kAbort,
 	kPause,
 	kNumElements

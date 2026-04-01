@@ -381,7 +381,7 @@ void GetLevelNumber()
 		TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 30, "CHEAT MODE", COL_RED, 3);
 
 		/* Divider */
-		TR_FillRect(fb, fbStride, 80, 68, 480, 1, COL_GRAY);
+		TR_FillRect(fb, fbStride, 80, 67, 480, 1, COL_GRAY);
 
 		/* --- Level section --- */
 		{
@@ -407,7 +407,7 @@ void GetLevelNumber()
 		}
 
 		/* Divider */
-		TR_FillRect(fb, fbStride, 80, 268, 480, 1, COL_GRAY);
+		TR_FillRect(fb, fbStride, 80, 262, 480, 1, COL_GRAY);
 
 		/* --- Vehicle section --- */
 		{
@@ -421,16 +421,16 @@ void GetLevelNumber()
 			{
 				tObjectTypePtr objType = (tObjectTypePtr)GetUnsortedPackEntry(kPackObTy, vi->id, 0);
 				if (objType) {
-					DrawSprite(objType->frame, 160, 340, 0.0f, 2.0f);
+					DrawSprite(objType->frame, 130, 330, 0.0f, 2.0f);
 				}
 			}
 
 			/* Name and description on the right */
 			snprintf(idBuf, sizeof(idBuf), "<  %s  >", vi->name);
-			TR_DrawStringCentered(fb, fbStride, 400, 318, idBuf,
+			TR_DrawStringCentered(fb, fbStride, 380, 318, idBuf,
 			                      (row == 1) ? COL_YELLOW : COL_WHITE, 3);
 
-			TR_DrawStringCentered(fb, fbStride, 400, 358, vi->desc,
+			TR_DrawStringCentered(fb, fbStride, SCREEN_WIDTH / 2, 358, vi->desc,
 			                      (row == 1) ? COL_CYAN : COL_GRAY, 2);
 		}
 
