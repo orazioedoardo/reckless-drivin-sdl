@@ -67,10 +67,13 @@ jobs:
           mkdir package
           cp build/Release/RecklessDrivin.exe package/
           cp build/Release/Data package/
-          cp "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/SDL2.dll" package/
-          Compress-Archive -Path package/* -DestinationPath "build/RecklessDrivin-$version-windows-x64.zip"
+          cp build/Release/*.dll package/
+          if (!(Test-Path package/SDL2.dll)) {
+              cp "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/SDL2.dll" package/
+          }
+          Compress-Archive -Path package/* -DestinationPath "build/Reckless-Drivin-$version-windows-x64.zip"
 
       - uses: actions/upload-artifact@v6
         with:
           name: windows-build-x64
-          path: build/RecklessDrivin-*-windows-x64.zip
+          path: build/Reckless-Drivin-*-windows-x64.zip

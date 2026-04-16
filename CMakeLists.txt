@@ -165,3 +165,18 @@ else()
         COMMENT "Copying Data file to build directory"
     )
 endif()
+
+# Windows: bundle MSVC runtime DLLs next to the exe so users don't need
+# the Visual C++ Redistributable installed separately. Targets Windows 10/11,
+# so the Universal CRT is assumed present and not bundled.
+if(WIN32 AND MSVC)
+    set(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP TRUE)
+    include(InstallRequiredSystemLibraries)
+    foreach(_crt_lib ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS})
+        add_custom_command(TARGET RecklessDrivin POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_crt_lib}" "$<TARGET_FILE_DIR:RecklessDrivin>"
+            VERBATIM
+        )
+    endforeach()
+endif()
