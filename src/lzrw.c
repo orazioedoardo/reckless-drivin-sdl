@@ -42,12 +42,17 @@
 /* ---- LZRW3-A decompressor (adapted from Ross Williams' reference) ---- */
 
 static void lzrw3a_decompress(const uint8_t *p_src_first, uint32_t src_len,
-                                uint8_t *p_dst_first, uint32_t *p_dst_len) {
+                                uint8_t *p_dst_first, uint32_t dst_capacity,
+                                uint32_t *p_dst_len) {
     const uint8_t *p_src = p_src_first + FLAG_BYTES;
     uint8_t *p_dst = p_dst_first;
 
     const uint8_t *p_src_post  = p_src_first + src_len;
     const uint8_t *p_src_max16 = p_src_first + src_len - (MAX_CMP_GROUP - 2);
+
+    /* Output bound: the produced length is driven by the (untrusted) stream,
+     * not the declared size, so every write is checked against this. */
+    uint8_t *p_dst_end = p_dst_first + dst_capacity;
 
     /* Hash table: 4096 pointers into the output buffer */
     uint8_t *hash[HASH_TABLE_LENGTH];
@@ -59,6 +64,8 @@ static void lzrw3a_decompress(const uint8_t *p_src_first, uint32_t src_len,
     /* Check copy flag */
     if (*p_src_first == FLAG_COPY) {
         uint32_t copy_len = src_len - FLAG_BYTES;
+        if (copy_len > dst_capacity)
+            copy_len = dst_capacity;
         memcpy(p_dst_first, p_src_first + FLAG_BYTES, copy_len);
         *p_dst_len = copy_len;
         return;
@@ -75,6 +82,9 @@ static void lzrw3a_decompress(const uint8_t *p_src_first, uint32_t src_len,
         uint32_t unroll;
 
         if (control == 1) {
+            /* Refill reads 2 control bytes; stop on a truncated stream. */
+            if (p_src + 2 > p_src_post)
+                goto done;
             control = 0x10000 | *p_src++;
             control |= (*p_src++) << 8;
         }
@@ -89,12 +99,17 @@ static void lzrw3a_decompress(const uint8_t *p_src_first, uint32_t src_len,
                 uint8_t *p_ziv = p_dst;
                 uint32_t index;
 
+                /* Copy item reads 2 source bytes; stop on a truncated stream. */
+                if (p_src + 2 > p_src_post)
+                    goto done;
                 lenmt = *p_src++;
                 index = ((lenmt & 0xF0) << 4) | *p_src++;
                 p = hash[index];
                 lenmt &= 0xF;
 
-                /* Copy 3 + lenmt bytes */
+                /* Copy 3 + lenmt bytes; stop if it would overrun the output */
+                if (p_dst + 3 + lenmt > p_dst_end)
+                    goto done;
                 *p_dst++ = *p++;
                 *p_dst++ = *p++;
                 *p_dst++ = *p++;
@@ -118,7 +133,9 @@ static void lzrw3a_decompress(const uint8_t *p_src_first, uint32_t src_len,
                 hash[(index & (~DEPTH_MASK)) + cycle] = p_ziv;
                 cycle = (cycle + 1) & DEPTH_MASK;
             } else {
-                /* Literal item */
+                /* Literal item reads 1 source byte and writes 1 output byte. */
+                if (p_src >= p_src_post || p_dst >= p_dst_end)
+                    goto done;
                 *p_dst++ = *p_src++;
 
                 if (++literals == 3) {
@@ -136,6 +153,7 @@ static void lzrw3a_decompress(const uint8_t *p_src_first, uint32_t src_len,
         }
     }
 
+done:
     *p_dst_len = (uint32_t)(p_dst - p_dst_first);
 }
 
@@ -164,7 +182,8 @@ void *LZRW_Decompress(const void *compressedData, long compressedSize, long *out
     }
 
     /* Allocate output buffer with some overrun space */
-    uint8_t *dst = (uint8_t *)calloc(1, uncompressed_size + 1024);
+    uint32_t dst_capacity = uncompressed_size + 1024;
+    uint8_t *dst = (uint8_t *)calloc(1, dst_capacity);
     if (!dst) {
         fprintf(stderr, "LZRW_Decompress: out of memory for %u bytes\n",
                 (unsigned)uncompressed_size);
@@ -176,7 +195,7 @@ void *LZRW_Decompress(const void *compressedData, long compressedSize, long *out
     uint32_t lzrw_src_len = (uint32_t)(compressedSize - 4);
     uint32_t dst_len = 0;
 
-    lzrw3a_decompress(src + 4, lzrw_src_len, dst, &dst_len);
+    lzrw3a_decompress(src + 4, lzrw_src_len, dst, dst_capacity, &dst_len);
 
     if (dst_len != uncompressed_size) {
         fprintf(stderr, "LZRW_Decompress: warning: expected %u bytes, got %u\n",

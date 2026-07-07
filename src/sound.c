@@ -17,6 +17,7 @@
 #include "random.h"
 #include "vec2d.h"
 #include <math.h>
+#include <stddef.h>
 #include <stdio.h>
 
 /* ======================================================================== */
@@ -201,7 +202,26 @@ static const UInt8 *GetSampleData(const tSound *s, int sampleIndex,
         return NULL;
     }
 
+    /* numSamples is itself an untrusted field, so the offsets[] table it
+     * sizes may extend past the entry. Verify the table fits before indexing
+     * it, otherwise SoundOffset reads out of bounds. */
+    if ((long long)offsetof(tSound, offsets) + (long long)numSamples * sizeof(UInt32)
+            > (long long)totalEntrySize) {
+        *outLen = 0;
+        *outPitchAdj = 1.0f;
+        *outBitsPerSample = 8;
+        return NULL;
+    }
+
     UInt32 offset = SoundOffset(s, sampleIndex);
+    /* The offset is an untrusted resource field; reject it if it does not
+     * land inside the entry, otherwise hdrStart points past the buffer. */
+    if (offset >= (UInt32)totalEntrySize) {
+        *outLen = 0;
+        *outPitchAdj = 1.0f;
+        *outBitsPerSample = 8;
+        return NULL;
+    }
     const UInt8 *base = (const UInt8 *)s;
     const UInt8 *hdrStart = base + offset;
 
@@ -213,6 +233,10 @@ static const UInt8 *GetSampleData(const tSound *s, int sampleIndex,
     } else {
         rawLen = totalEntrySize - (int)offset;
     }
+    /* Clamp to the bytes actually present; a bogus next offset must not let
+     * rawLen exceed the entry. */
+    if (rawLen > totalEntrySize - (int)offset)
+        rawLen = totalEntrySize - (int)offset;
 
     if (rawLen <= 0) {
         *outLen = 0;
@@ -228,6 +252,20 @@ static const UInt8 *GetSampleData(const tSound *s, int sampleIndex,
                                             &numFrames, &nativeRate,
                                             &bitsPerSample);
     if (!pcmData || numFrames <= 0) {
+        *outLen = 0;
+        *outPitchAdj = 1.0f;
+        *outBitsPerSample = 8;
+        return NULL;
+    }
+
+    /* Bound the header-declared frame count by the PCM bytes that actually
+     * follow the header, so the mixer thread cannot read past the entry. */
+    int headerSize = (int)(pcmData - hdrStart);
+    int bytesPerFrame = (bitsPerSample >= 16) ? 2 : 1;
+    int availFrames = (rawLen - headerSize) / bytesPerFrame;
+    if (numFrames > availFrames)
+        numFrames = availFrames;
+    if (numFrames <= 0) {
         *outLen = 0;
         *outPitchAdj = 1.0f;
         *outBitsPerSample = 8;

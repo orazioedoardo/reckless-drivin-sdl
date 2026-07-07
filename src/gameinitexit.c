@@ -538,7 +538,20 @@ void StartGame(int lcheat)
 	gGameOn=true;
 	gEndGame=false;
 	if(lcheat)
+	{
 		GetLevelNumber();
+		if(gEndGame)
+		{
+			/* Cancelled from the level select screen: return to the menu
+			 * without loading a level or running the game-over sequence.
+			 * Clear gGameOn here rather than relying on InitInterface to do
+			 * it, so the main loop resumes Eventloop even if that changes. */
+			gGameOn=false;
+			gEndGame=false;
+			InitInterface();
+			return;
+		}
+	}
 	gLCheat=lcheat;
 	FadeScreen(1);
 	/* HideCursor() - handled by platform layer */

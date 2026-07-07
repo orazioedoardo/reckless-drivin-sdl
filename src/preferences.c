@@ -19,6 +19,10 @@ static const char *GetPrefsPath(void)
         SDL_free(prefDir);
     } else {
         const char *home = getenv("HOME");
+#ifdef _WIN32
+        if (!home) home = getenv("USERPROFILE");
+        if (!home) home = getenv("APPDATA");
+#endif
         if (!home) home = ".";
         snprintf(path, sizeof(path), "%s/.recklessdrivin_prefs", home);
     }
@@ -281,6 +285,7 @@ void Preferences(void)
                         if (i == kPrefControls) {
                             gPrefs.sound = snd;
                             gPrefs.engineSound = engSnd;
+                            gPrefs.skidSound = skidSnd;
                             gPrefs.hqSound = hqSnd;
                             gPrefs.volume = volume;
                             gPrefs.motionBlur = motionBlur;
