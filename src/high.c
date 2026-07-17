@@ -57,6 +57,9 @@ void ShowHighScores(int hilite)
 	FadeScreen(1);
 	ScreenUpdate();
 	FadeScreen(0);
+	/* The fades pump events; drop anything pressed during them so it does
+	 * not linger and activate a menu button on return. */
+	SaveFlushEvents();
 }
 
 extern int gOSX;
@@ -97,9 +100,13 @@ void SetHighScoreEntry(int index, UInt32 score)
 				done = 1;
 				break;
 			case SDL_KEYDOWN:
-				if (ev.key.keysym.sym == SDLK_RETURN || ev.key.keysym.sym == SDLK_KP_ENTER) {
+				/* Confirm needs a fresh press (a held key auto-repeating
+				 * must not dismiss the prompt); backspace keeps repeat
+				 * for hold-to-erase. */
+				if ((ev.key.keysym.sym == SDLK_RETURN ||
+				     ev.key.keysym.sym == SDLK_KP_ENTER) && !ev.key.repeat) {
 					done = 1;
-				} else if (ev.key.keysym.sym == SDLK_ESCAPE) {
+				} else if (ev.key.keysym.sym == SDLK_ESCAPE && !ev.key.repeat) {
 					done = 1;
 				} else if (ev.key.keysym.sym == SDLK_BACKSPACE && inputLen > 0) {
 					inputLen--;

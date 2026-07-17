@@ -95,23 +95,24 @@ static void BlitButtonRect(int button, UInt16 *source)
 }
 
 /* Map a keyboard shortcut to the button index it corresponds to.
- * Returns kNoButton if no match. */
+ * Returns kNoButton if no match. Presses are consumed on read, so a key
+ * held down while a submenu closes cannot re-trigger its button. */
 static int KeyToButton(void)
 {
-	if (Platform_IsKeyDown(SDL_SCANCODE_RETURN) ||
-	    Platform_IsKeyDown(SDL_SCANCODE_KP_ENTER) ||
-	    Platform_IsKeyDown(SDL_SCANCODE_S) ||
-	    Platform_IsKeyDown(SDL_SCANCODE_N))
+	if (Platform_WasKeyPressed(SDL_SCANCODE_RETURN) ||
+	    Platform_WasKeyPressed(SDL_SCANCODE_KP_ENTER) ||
+	    Platform_WasKeyPressed(SDL_SCANCODE_S) ||
+	    Platform_WasKeyPressed(SDL_SCANCODE_N))
 		return kStartGameButton;
-	if (Platform_IsKeyDown(SDL_SCANCODE_P))
+	if (Platform_WasKeyPressed(SDL_SCANCODE_P))
 		return kPrefsButton;
-	if (Platform_IsKeyDown(SDL_SCANCODE_C) ||
-	    Platform_IsKeyDown(SDL_SCANCODE_O))
+	if (Platform_WasKeyPressed(SDL_SCANCODE_C) ||
+	    Platform_WasKeyPressed(SDL_SCANCODE_O))
 		return kScoreButton;
-	if (Platform_IsKeyDown(SDL_SCANCODE_H) ||
-	    Platform_IsKeyDown(SDL_SCANCODE_SLASH))
+	if (Platform_WasKeyPressed(SDL_SCANCODE_H) ||
+	    Platform_WasKeyPressed(SDL_SCANCODE_SLASH))
 		return kHelpButton;
-	if (Platform_IsKeyDown(SDL_SCANCODE_Q))
+	if (Platform_WasKeyPressed(SDL_SCANCODE_Q))
 		return kQuitButton;
 	return kNoButton;
 }
@@ -399,47 +400,39 @@ void InitInterface(void)
 		ShowPicScreen(1000);
 	}
 	sHoverButton = kNoButton;
+	/* Menu shortcuts are edge-triggered (KeyToButton), so keys still held
+	 * from the game cannot fire immediately; flushing is enough. */
 	SaveFlushEvents();
 	gGameOn=false;
-	/* Wait for action keys to be released to prevent immediate menu triggers */
-	while(Platform_IsKeyDown(SDL_SCANCODE_RETURN)||
-		  Platform_IsKeyDown(SDL_SCANCODE_KP_ENTER)||
-		  Platform_IsKeyDown(SDL_SCANCODE_SPACE)||
-		  Platform_IsKeyDown(SDL_SCANCODE_ESCAPE))
-	{
-		Platform_PollEvents();
-		SDL_Delay(16);
-	}
 }
 
 void WaitForPress(void)
 {
 	int pressed=false;
+	int prevContinue;
 	Platform_ShowCursor();
-	/* Wait for any held keys/buttons to be released first */
-	for(;;)
-	{
-		Platform_PollEvents();
-		if(Platform_ShouldQuit()) return;
-		Platform_GetMouseClick(NULL,NULL);
-		if(!Platform_IsKeyDown(SDL_SCANCODE_RETURN)&&
-		   !Platform_IsKeyDown(SDL_SCANCODE_SPACE)&&
-		   !Platform_IsKeyDown(SDL_SCANCODE_ESCAPE)&&
-		   !Platform_ContinuePress())
-			break;
-		SDL_Delay(16);
-	}
+	/* Consume anything still pending from the previous screen; keys held
+	 * across the transition then need a fresh press to register. */
+	Platform_FlushInput();
+	prevContinue=Platform_ContinuePress();
 	while(!pressed)
 	{
 		Platform_PollEvents();
 		if(Platform_ShouldQuit())
 			break;
-		if(Platform_IsKeyDown(SDL_SCANCODE_RETURN)||
-		   Platform_IsKeyDown(SDL_SCANCODE_SPACE)||
-		   Platform_IsKeyDown(SDL_SCANCODE_ESCAPE)||
-		   Platform_ContinuePress()||
+		if(Platform_WasKeyPressed(SDL_SCANCODE_RETURN)||
+		   Platform_WasKeyPressed(SDL_SCANCODE_KP_ENTER)||
+		   Platform_WasKeyPressed(SDL_SCANCODE_SPACE)||
+		   Platform_WasKeyPressed(SDL_SCANCODE_ESCAPE)||
 		   Platform_GetMouseClick(NULL,NULL))
 			pressed=true;
+		/* Gamepad action buttons are level-based; take the rising edge. */
+		{
+			int cont=Platform_ContinuePress();
+			if(cont&&!prevContinue)
+				pressed=true;
+			prevContinue=cont;
+		}
 		SDL_Delay(16);
 	}
 	SaveFlushEvents();
@@ -458,7 +451,15 @@ static void RestoreMenuScreen(void)
 	}
 }
 
-static void HandleCommand(int cmd)
+/* Holding Shift while starting the game opens the level/vehicle select
+ * (cheat mode), whether the start came from Enter or a mouse click. */
+static int ShiftHeld(void)
+{
+	return Platform_IsKeyDown(SDL_SCANCODE_LSHIFT) ||
+	       Platform_IsKeyDown(SDL_SCANCODE_RSHIFT);
+}
+
+static void HandleCommand(int cmd, int shiftHeld)
 {
 	switch(cmd)
 	{
@@ -468,7 +469,7 @@ static void HandleCommand(int cmd)
 			RestoreMenuScreen();
 			break;
 		case kStartGameButton:
-			StartGame(0);
+			StartGame(shiftHeld);
 			break;
 		case kPrefsButton:
 			Preferences();
@@ -494,13 +495,20 @@ static void HandleCommand(int cmd)
 /* Show press feedback for a button, then execute the command */
 static void ActivateButton(int button)
 {
+	/* Sample Shift at the moment of activation so the level select cheat
+	 * triggers even if the chord is released during the press animation. */
+	int shiftHeld = ShiftHeld();
 	if (sMenuImagesLoaded && button >= 0 && button < (int)kNumButtons) {
 		BlitButtonRect(button, sMenuPressed);
 		Platform_Blit2Screen();
 		SimplePlaySound(147);
 		SDL_Delay(100);
+		/* Re-read after the delay as a grace period for a rolled Shift+Enter
+		 * chord where Enter arrived a frame before Shift. */
+		Platform_PollEvents();
+		shiftHeld = shiftHeld || ShiftHeld();
 	}
-	HandleCommand(button);
+	HandleCommand(button, shiftHeld);
 	/* Restore menu after returning from the command */
 	if (!gGameOn && !gExit) {
 		sHoverButton = kNoButton;
@@ -515,24 +523,6 @@ void Eventloop(void)
 	if(Platform_ShouldQuit())
 	{
 		gExit=true;
-		return;
-	}
-
-	/* --- Level select cheat: Shift+Enter (must be checked first) --- */
-	if ((Platform_IsKeyDown(SDL_SCANCODE_LSHIFT) ||
-	     Platform_IsKeyDown(SDL_SCANCODE_RSHIFT)) &&
-	    (Platform_IsKeyDown(SDL_SCANCODE_RETURN) ||
-	     Platform_IsKeyDown(SDL_SCANCODE_KP_ENTER)))
-	{
-		extern void StartGame(int lcheat);
-		if (sMenuImagesLoaded) {
-			BlitButtonRect(kStartGameButton, sMenuPressed);
-			Platform_Blit2Screen();
-			SimplePlaySound(147);
-			SDL_Delay(100);
-		}
-		StartGame(1);
-		if (!gGameOn && !gExit) sHoverButton = kNoButton;
 		return;
 	}
 
