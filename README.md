@@ -149,7 +149,7 @@ cmake --build build-web
 python3 -m http.server --directory build-web
 ```
 
-`build-web` holds everything to host: `RecklessDrivin.html`, `.js`, `.wasm`, `.data` and `icon.png`. Any static web server works; opening the HTML file directly does not. Preferences and high scores are saved in the browser (IndexedDB). Cmd+F toggles fullscreen.
+`build-web` holds everything to host: `RecklessDrivin.html`, `.js`, `.wasm`, `.data` and `RecklessDrivin.png`. Any static web server works; opening the HTML file directly does not. Preferences and high scores are saved in the browser (IndexedDB). Cmd+F toggles fullscreen.
 
 ---
 
