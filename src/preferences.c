@@ -10,6 +10,15 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+
+/* Waits for the write to finish: the game saves its preferences while quitting,
+ * and exiting the runtime closes the database, failing any write still in flight. */
+EM_ASYNC_JS(void, SyncPrefsToIndexedDB, (void), {
+    await new Promise((resolve) => FS.syncfs(false, (err) => {
+        if (err) console.warn("Saving preferences failed:", err);
+        resolve();
+    }));
+});
 #endif
 
 tPrefs gPrefs;
@@ -122,9 +131,7 @@ void WritePrefs(int reset)
 #ifdef __EMSCRIPTEN__
         /* The prefs directory is backed by IndexedDB (mounted by the web
          * page); flush the change so it survives a reload. */
-        EM_ASM(FS.syncfs(false, function (err) {
-            if (err) console.warn("Saving preferences failed:", err);
-        }););
+        SyncPrefsToIndexedDB();
 #endif
     }
 }
