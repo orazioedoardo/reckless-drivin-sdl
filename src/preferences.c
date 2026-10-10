@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 tPrefs gPrefs;
 
 static const char *GetPrefsPath(void)
@@ -115,6 +119,13 @@ void WritePrefs(int reset)
     {
         fwrite(&gPrefs, 1, sizeof(tPrefs), f);
         fclose(f);
+#ifdef __EMSCRIPTEN__
+        /* The prefs directory is backed by IndexedDB (mounted by the web
+         * page); flush the change so it survives a reload. */
+        EM_ASM(FS.syncfs(false, function (err) {
+            if (err) console.warn("Saving preferences failed:", err);
+        }););
+#endif
     }
 }
 

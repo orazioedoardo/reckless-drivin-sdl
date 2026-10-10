@@ -34,7 +34,9 @@ if(APPLE)
     endif()
 endif()
 
-if(NOT SDL2_FRAMEWORK)
+if(EMSCRIPTEN)
+    # SDL2 comes from Emscripten's port (-sUSE_SDL=2), set on the target below
+elseif(NOT SDL2_FRAMEWORK)
     find_package(PkgConfig QUIET)
     if(PKG_CONFIG_FOUND)
         pkg_check_modules(SDL2 IMPORTED_TARGET sdl2)
@@ -120,7 +122,29 @@ else()
 endif()
 
 # Link libraries
-if(SDL2_FRAMEWORK)
+if(EMSCRIPTEN)
+    # Web build: the blocking menu/game loops run unchanged under ASYNCIFY.
+    # The Data file is preloaded into the virtual filesystem at /Data, which is
+    # where FindDataFile looks (argv[0] is "./this.program", cwd "/").
+    set_target_properties(RecklessDrivin PROPERTIES SUFFIX ".html")
+    target_compile_options(RecklessDrivin PRIVATE "-sUSE_SDL=2")
+    target_link_options(RecklessDrivin PRIVATE
+        "-sUSE_SDL=2"
+        "-sASYNCIFY"
+        "-sASYNCIFY_STACK_SIZE=131072"
+        "-sSTACK_SIZE=1048576"
+        "-sALLOW_MEMORY_GROWTH"
+        "-sINVOKE_RUN=0"
+        "-sEXIT_RUNTIME"
+        "-sEXPORTED_RUNTIME_METHODS=callMain,FS,IDBFS,addRunDependency,removeRunDependency"
+        "-lidbfs.js"
+        "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/Data@/Data"
+        "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/packaging/web/shell.html"
+    )
+    set_property(TARGET RecklessDrivin APPEND PROPERTY LINK_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/web/shell.html"
+        "${CMAKE_CURRENT_SOURCE_DIR}/Data")
+elseif(SDL2_FRAMEWORK)
     target_link_libraries(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/SDL2)
     target_include_directories(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/Headers)
 elseif(TARGET PkgConfig::SDL2)
@@ -147,8 +171,17 @@ if(APPLE)
     target_link_libraries(RecklessDrivin PRIVATE "-framework Cocoa")
 endif()
 
-# Copy the Data file next to the executable (inside .app bundle on macOS)
-if(APPLE)
+# Copy the Data file next to the executable (inside .app bundle on macOS).
+# The web build packs it into the .data bundle instead and only needs the
+# icon next to the page.
+if(EMSCRIPTEN)
+    add_custom_command(
+        TARGET RecklessDrivin POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/icon.png"
+            "$<TARGET_FILE_DIR:RecklessDrivin>/icon.png"
+    )
+elseif(APPLE)
     add_custom_command(
         TARGET RecklessDrivin POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

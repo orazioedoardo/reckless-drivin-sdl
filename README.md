@@ -135,6 +135,22 @@ build\Release\RecklessDrivin.exe
 
 Copy `SDL2.dll` from `vcpkg/installed/x64-windows/bin/` next to the exe if distributing.
 
+### Build & Run in a Browser (WebAssembly)
+
+```bash
+# Install the Emscripten SDK (https://emscripten.org/docs/getting_started/downloads.html)
+source path/to/emsdk/emsdk_env.sh
+
+# Build (SDL2 comes from Emscripten's built-in port)
+emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release
+cmake --build build-web
+
+# Serve and open http://localhost:8000/RecklessDrivin.html
+python3 -m http.server --directory build-web
+```
+
+`build-web` holds everything to host: `RecklessDrivin.html`, `.js`, `.wasm`, `.data` and `icon.png`. Any static web server works; opening the HTML file directly does not. Preferences and high scores are saved in the browser (IndexedDB). F11 or Alt+Enter toggles fullscreen.
+
 ---
 
 ## Controls
