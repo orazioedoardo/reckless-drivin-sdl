@@ -147,7 +147,7 @@ void Platform_ShutdownScreen(void)
 void Platform_ToggleFullscreen(void)
 {
 #ifdef __EMSCRIPTEN__
-    /* The web page handles F11 / Alt+Enter itself: fullscreen can only be
+    /* The web page handles fullscreen itself (Cmd+F): it can only be
      * requested from inside the browser's key event handler. */
     return;
 #endif

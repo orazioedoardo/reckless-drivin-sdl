@@ -98,20 +98,17 @@
 	const progressEl = document.getElementById("progress");
 	const playButton = document.getElementById("play");
 
-	// Fullscreen shortcuts (same keys as the desktop build). Fullscreen can only
-	// be requested from inside the browser's key handler, so handle them here,
-	// before SDL sees the key, and keep the browser's own F11 from firing.
+	// Cmd+F toggles fullscreen. This runs before the game's own key handling,
+	// so the game never sees the keypress and the browser doesn't open its Find bar.
 	window.addEventListener("keydown", (e) => {
-		const isF11 = e.code === "F11";
-		const isAltEnter = e.code === "Enter" && e.altKey;
-		if (!isF11 && !isAltEnter) return;
-		e.preventDefault();
-		e.stopImmediatePropagation();
-		if (e.repeat) return;
-		if (document.fullscreenElement) {
-			document.exitFullscreen();
-		} else {
-			stage.requestFullscreen().catch(() => {});
+		if (e.code === "KeyF" && e.metaKey && !e.repeat) {
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			if (document.fullscreenElement) {
+				document.exitFullscreen();
+			} else {
+				stage.requestFullscreen().catch(() => {});
+			}
 		}
 	}, true);
 
