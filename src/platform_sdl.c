@@ -23,6 +23,23 @@
 #include <string.h>
 #include <math.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+/*
+ * Wait for the browser's next display refresh. This stands in for the
+ * vsync'd SDL_RenderPresent of the native build: every loop that presents a
+ * frame (gameplay, menus, fades, the shift-in and game-over animations) yields
+ * here, which lets the browser show the canvas and deliver input and audio.
+ */
+EM_ASYNC_JS(void, WaitForAnimationFrame, (void), {
+    await new Promise(resolve => requestAnimationFrame(resolve));
+});
+
+/* Time the game clock was stopped because the tab was hidden (rAF paused). */
+static UInt64 sSuspendedMicroseconds = 0;
+#endif
+
 /* ========================================================================= */
 /*  Screen subsystem                                                          */
 /* ========================================================================= */
@@ -53,9 +70,17 @@ void Platform_InitScreen(void)
         int winH = gPrefs.unused[2] | (gPrefs.unused[3] << 8);
         if (!winW) winW = SCREEN_WIDTH;
         if (!winH) winH = SCREEN_HEIGHT;
+#ifdef __EMSCRIPTEN__
+        /* The canvas backing store stays at the game's native 640x480; the
+         * web page scales it with CSS and handles fullscreen itself. */
+        Uint32 flags = SDL_WINDOW_SHOWN;
+        winW = SCREEN_WIDTH;
+        winH = SCREEN_HEIGHT;
+#else
         Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
         if (gPrefs.unused[4])
             flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+#endif
         sWindow = SDL_CreateWindow(
             "Reckless Drivin'",
             SDL_WINDOWPOS_CENTERED,
@@ -70,10 +95,16 @@ void Platform_InitScreen(void)
         return;
     }
 
+#ifdef __EMSCRIPTEN__
+    /* No PRESENTVSYNC: SDL implements it with the Emscripten main loop, which
+     * this game doesn't use. Presents wait for requestAnimationFrame instead. */
+    sRenderer = SDL_CreateRenderer(sWindow, -1, SDL_RENDERER_ACCELERATED);
+#else
     sRenderer = SDL_CreateRenderer(
         sWindow, -1,
         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
     );
+#endif
     if (!sRenderer) {
         fprintf(stderr, "[platform] SDL_CreateRenderer failed: %s\n",
                 SDL_GetError());
@@ -115,6 +146,11 @@ void Platform_ShutdownScreen(void)
 
 void Platform_ToggleFullscreen(void)
 {
+#ifdef __EMSCRIPTEN__
+    /* The web page handles F11 / Alt+Enter itself: fullscreen can only be
+     * requested from inside the browser's key event handler. */
+    return;
+#endif
     if (!sWindow) return;
     Uint32 flags = SDL_GetWindowFlags(sWindow);
     if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP) {
@@ -196,6 +232,19 @@ void Platform_ScaleToFitWindow(void)
 
     SDL_RenderCopy(sRenderer, sTexture, NULL, &dst);
     SDL_RenderPresent(sRenderer);
+
+#ifdef __EMSCRIPTEN__
+    {
+        UInt64 before = Platform_GetMicroseconds();
+        WaitForAnimationFrame();
+        UInt64 waited = Platform_GetMicroseconds() - before;
+        /* Browsers stop requestAnimationFrame in hidden tabs. Stop the game
+         * clock too, so returning to the tab doesn't make the game run
+         * minutes of catch-up physics before it draws again. */
+        if (waited > 250000)
+            sSuspendedMicroseconds += waited - 16667;
+    }
+#endif
 }
 
 void Platform_FadeScreen(int fade)
@@ -987,10 +1036,15 @@ UInt64 Platform_GetMicroseconds(void)
      * formula which is safe as long as the counter value hasn't been running
      * for centuries (which it hasn't -- SDL counters reset on boot).
      */
-    if (freq >= 1000000ULL && (freq % 1000000ULL) == 0) {
-        return counter / (freq / 1000000ULL);
-    }
-    return (counter * 1000000ULL) / freq;
+    UInt64 us;
+    if (freq >= 1000000ULL && (freq % 1000000ULL) == 0)
+        us = counter / (freq / 1000000ULL);
+    else
+        us = (counter * 1000000ULL) / freq;
+#ifdef __EMSCRIPTEN__
+    us -= sSuspendedMicroseconds;
+#endif
+    return us;
 }
 
 /* ========================================================================= */
