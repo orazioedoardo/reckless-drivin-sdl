@@ -144,12 +144,9 @@ source path/to/emsdk/emsdk_env.sh
 # Build (SDL2 comes from Emscripten's built-in port)
 emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release
 cmake --build build-web
-
-# Serve and open http://localhost:8000/RecklessDrivin.html
-python3 -m http.server --directory build-web
 ```
 
-`build-web` holds everything to host: `RecklessDrivin.html`, `.js`, `.wasm`, `.data` and `RecklessDrivin.png`. Any static web server works; opening the HTML file directly does not. Preferences and high scores are saved in the browser (IndexedDB). Cmd+F toggles fullscreen.
+`build-web` then holds `RecklessDrivin.js`, `.wasm`, `.data` (the game's assets) and `RecklessDrivin.png` (its icon). There's no web page in the build: the site that hosts the game provides it. That page must give the runtime its canvas (`Module.canvas`), keep `/libsdl` in IndexedDB (mount `IDBFS` there and sync it before the game starts), and start the game with `Module.callMain()`, from a click so that the browser allows audio. That keeps preferences and high scores across visits.
 
 ---
 

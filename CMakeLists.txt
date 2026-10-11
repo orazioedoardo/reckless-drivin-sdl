@@ -126,7 +126,8 @@ if(EMSCRIPTEN)
     # Web build: the blocking menu/game loops run unchanged under ASYNCIFY.
     # The Data file is preloaded into the virtual filesystem at /Data, which is
     # where FindDataFile looks (argv[0] is "./this.program", cwd "/").
-    set_target_properties(RecklessDrivin PROPERTIES SUFFIX ".html")
+    # Builds the game's .js, .wasm and .data; the web page that runs them comes from the site hosting the game
+    set_target_properties(RecklessDrivin PROPERTIES SUFFIX ".js")
     target_compile_options(RecklessDrivin PRIVATE "-sUSE_SDL=2")
     target_link_options(RecklessDrivin PRIVATE
         "-sUSE_SDL=2"
@@ -139,10 +140,8 @@ if(EMSCRIPTEN)
         "-sEXPORTED_RUNTIME_METHODS=callMain,FS,IDBFS,addRunDependency,removeRunDependency"
         "-lidbfs.js"
         "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/Data@/Data"
-        "--shell-file=${CMAKE_CURRENT_SOURCE_DIR}/packaging/web/shell.html"
     )
     set_property(TARGET RecklessDrivin APPEND PROPERTY LINK_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/web/shell.html"
         "${CMAKE_CURRENT_SOURCE_DIR}/Data")
 elseif(SDL2_FRAMEWORK)
     target_link_libraries(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/SDL2)
