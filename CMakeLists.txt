@@ -141,8 +141,10 @@ if(EMSCRIPTEN)
         "-lidbfs.js"
         "--preload-file=${CMAKE_CURRENT_SOURCE_DIR}/Data@/Data"
     )
+    # Relink when the data or the icon changes (the icon is copied after linking)
     set_property(TARGET RecklessDrivin APPEND PROPERTY LINK_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/Data")
+        "${CMAKE_CURRENT_SOURCE_DIR}/Data"
+        "${CMAKE_CURRENT_SOURCE_DIR}/packaging/RecklessDrivin.png")
 elseif(SDL2_FRAMEWORK)
     target_link_libraries(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/SDL2)
     target_include_directories(RecklessDrivin PRIVATE ${SDL2_FRAMEWORK}/Headers)
@@ -172,12 +174,13 @@ endif()
 
 # Copy the Data file next to the executable (inside .app bundle on macOS).
 # The web build packs it into the .data bundle instead and only needs the
-# icon next to the page.
+# icon next to the page (packaging/RecklessDrivin.png is Reckless.icns as a PNG,
+# since browsers can't show .icns files).
 if(EMSCRIPTEN)
     add_custom_command(
         TARGET RecklessDrivin POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/icon.png"
+            "${CMAKE_CURRENT_SOURCE_DIR}/packaging/RecklessDrivin.png"
             "$<TARGET_FILE_DIR:RecklessDrivin>/RecklessDrivin.png"
     )
 elseif(APPLE)
